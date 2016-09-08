@@ -880,8 +880,8 @@ void RagdollDemo::initParams(const std::string& inputFileName)
 		m_inputFileName = inputFileName;
 }
 
-//vector<vector<vector<float > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output)
-vector<int > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output)
+vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output)
+//vector<int > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output)
 {
 	// some housekeeping variables:
 	// arrays for evaluating neuronal dynamics, one records the time step and the other that contains ids:
@@ -898,9 +898,9 @@ vector<int > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<flo
 	int excGain = 20; // input gain for excitatory neurons
 	int inhGain = 5; // input gain for inhibitory neurons
 	// 1st row - values of "v", 2nd row - values of "u", 3rd row - firing times of the output neurons
-	//vector<vector<vector<float > > > output(Ne+Ni, vector<vector<float > >(Ne+Ni, vector<float >(num_output))); 
+	vector<vector<float > > output(3,vector<float >(totalNeuronNum));
 	//vector<float > outFired(num_output);
-	vector<int > outFired(num_output);
+	//vector<int > outFired(num_output);
 
 	// MAIN CYCLE:
 	for (int t = 0; t < simT; t++)
@@ -932,10 +932,13 @@ vector<int > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<flo
 				fired.push_back(i);
 				sizeOfFired++;
 				// if the fired neuron belongs to the output neurons:
-				if ((i > Ne - num_output) && (i < Ne))
-				{
-					outFired[i - (Ne-num_output)] = t;
-				}
+				//if ((i > Ne - num_output) && (i < Ne))
+				//{
+				//	outFired[i - (Ne-num_output)] = t;
+				//}
+				// record time when this neuron fired:
+				output[2][i] = t;
+
 
 				fireTime.push_back(t);
 				fireID.push_back(i);
@@ -968,7 +971,9 @@ vector<int > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<flo
 	//output[0].push_back(v);
 	//output[1].push_back(u);
 	//output[2].push_back(outFired);
-	return outFired;
+	output[0] = v;
+	output[1] = u;
+	return output;
 
 }
 
@@ -1004,7 +1009,10 @@ void RagdollDemo::initPhysics()
 
 	SimulationStep = 0; //time step counter to exit after desired # of steps
 	tempFitness = 0;
-
+	// 1st row - values of "v", 2nd row - values of "u", 3rd row - firing times of the output neurons
+	//vector<vector<float > > snn_state(3, vector<float >(Ne+Ni));
+	//vector<vector<float > > snn_state;
+	snn_state.push_back(vector<float >()); snn_state.push_back(vector<float >()); snn_state.push_back(vector<float >());
 	// initialize all of SNN params:
 	for (int i = 0; i < Ne+Ni; i++)
 	{
@@ -1016,8 +1024,10 @@ void RagdollDemo::initPhysics()
 			c.push_back((float)(-65 + 15 * pow(Re[i], 2)));
 			d.push_back((float)(8 - 6 * pow(Re[i], 2)));
 
-			v.push_back((float)(-65));
-			u.push_back(v[i] * b[i]);
+			//v.push_back((float)(-65));
+			snn_state[0].push_back((float)(-65));
+			//u.push_back(v[i] * b[i]);
+			snn_state[1].push_back(snn_state[0][i] * b[i]);
 		}
 		else
 		{
@@ -1027,10 +1037,14 @@ void RagdollDemo::initPhysics()
 			c.push_back((float)(-65));
 			d.push_back((float)2);
 
-			v.push_back((float)-65);
-			u.push_back(v[i] * b[i]);
+			//v.push_back((float)-65);
+			snn_state[0].push_back((float)-65);
+			//u.push_back(v[i] * b[i]);
+			snn_state[1].push_back(snn_state[0][i] * b[i]);
 		}
+		snn_state[2].push_back(0.0f);
 	}
+
 
 #ifdef TRAIN
 	pause = false;// should be false
@@ -1551,14 +1565,18 @@ void RagdollDemo::clientMoveAndDisplay()
 				}
 #endif
 				//update neronal states:
-				outFired = stepSNN(a, b, c, d, v, u, w, sensor_val, num_output);
+				cout << "snn_state[0].size() = " << snn_state[0].size() << endl;
+				cout << "snn_state[1].size() = " << snn_state[1].size() << endl;
+				cout << "snn_state[2].size() = " << snn_state[2].size() << endl;
+
+				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output);
 
 				//extract values from output layer:
 				for (int z = 0; z < num_output; z++)
 				{
-					cout << z << "-th output = " << outFired[z] << "--->";
+					cout << z << "-th output, " << Ne-z << "-th excitatory neuron's firing time = " << snn_state[2][Ne - z] << " is scaled to --->";
 					//targ_angs.push_back((2 * outFired[z] - 100) / 100); // map [0,99] to [-1,1]
-					targ_angs[z] = (double)(2 * outFired[z] - 100) / 100; // map [0,99] to [-1,1]
+					targ_angs[z] = (double)(2 * snn_state[2][Ne - z] - 100) / 100; // map [0,99] to [-1,1]
 					cout << targ_angs[z] << endl;
 				}
 				// for all motors
@@ -1575,26 +1593,26 @@ void RagdollDemo::clientMoveAndDisplay()
 					case 0: //Left Hip ML
 					{
 						targetAngle = ((HIP_ML_H - HIP_ML_L) / 2) * targetAngle + ((HIP_ML_H + HIP_ML_L) / 2); //HIP_ML [-38.8; 30.5]
-						//cout << "Sending target angle = " << targetAngle * 180 / M_PI << " to " << i << "-th motor that has limits [" << HIP_ML_L * 180 / M_PI << "," << HIP_ML_H * 180 / M_PI << "]" << endl;
+						cout << "Sending target angle = " << targetAngle * 180 / M_PI << " to " << i << "-th motor that has limits [" << HIP_ML_L * 180 / M_PI << "," << HIP_ML_H * 180 / M_PI << "]" << endl;
 
 						break;
 					}
 					case 1: //Left Hip AP
 					{
 						targetAngle = ((HIP_AP_H - HIP_AP_L) / 2) * targetAngle + ((HIP_AP_H + HIP_AP_L) / 2); //HIP_AP [-19; 121]
-						//cout << "Sending target angle = " << targetAngle * 180 / M_PI << " to " << i << "-th motor that has limits [" << HIP_AP_L * 180 / M_PI << "," << HIP_AP_H * 180 / M_PI << "]" << endl;
+						cout << "Sending target angle = " << targetAngle * 180 / M_PI << " to " << i << "-th motor that has limits [" << HIP_AP_L * 180 / M_PI << "," << HIP_AP_H * 180 / M_PI << "]" << endl;
 						break;
 					}
 					case 2: //Right Hip ML
 					{
 						targetAngle = ((HIP_ML_H - HIP_ML_L) / 2) * targetAngle + ((HIP_ML_H + HIP_ML_L) / 2); //HIP_ML [-38.8; 30.5]
-						//cout << "Sending target angle = " << targetAngle * 180 / M_PI << " to " << i << "-th motor that has limits [" << HIP_ML_L * 180 / M_PI << "," << HIP_ML_H * 180 / M_PI << "]" << endl;
+						cout << "Sending target angle = " << targetAngle * 180 / M_PI << " to " << i << "-th motor that has limits [" << HIP_ML_L * 180 / M_PI << "," << HIP_ML_H * 180 / M_PI << "]" << endl;
 						break;
 					}
 					case 3: //Right Hip AP
 					{
 						targetAngle = ((HIP_AP_H - HIP_AP_L) / 2) * targetAngle + ((HIP_AP_H + HIP_AP_L) / 2); //HIP_AP [-19; 121]
-						//cout << "Sending target angle = " << targetAngle * 180 / M_PI << " to " << i << "-th motor that has limits [" << HIP_AP_L * 180 / M_PI << "," << HIP_AP_H * 180 / M_PI << "]" << endl;
+						cout << "Sending target angle = " << targetAngle * 180 / M_PI << " to " << i << "-th motor that has limits [" << HIP_AP_L * 180 / M_PI << "," << HIP_AP_H * 180 / M_PI << "]" << endl;
 						break;
 					}
 					case 4: //Left Ankle ML

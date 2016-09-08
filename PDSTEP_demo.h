@@ -138,6 +138,8 @@ public:
 	vector<float> v;
 	// recovery variable:
 	vector<float> u;
+	// SNN state matrix: 1st row - v, 2nd - u, 3rd - firing times:
+	vector<vector<float > > snn_state;
 
 	// number of input neurons (= number of sensors):
 	int num_input;
@@ -162,8 +164,8 @@ public:
 	//vector of sensor values:
 	vector< int > sensor_val;
 	// Main SNN function:
-	//vector<vector<vector<float > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
-	vector<int > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
+	vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
+	//vector<int > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
 
 	// function that reads wts from a file
 	void initParams(const std::string& inputFileName); 

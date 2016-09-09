@@ -93,7 +93,7 @@ public:
 #endif
 
 	//maximal amount of steps in simulations:
-	int maxStep;
+	int maxStep; int simT;
 
 #ifdef TORSO
 	int IDs[8]; //CHANGE ACCORDING TO BODY PLAN; pointers to the body parts in contact
@@ -164,8 +164,13 @@ public:
 	//vector of sensor values:
 	vector< int > sensor_val;
 	// Main SNN function:
+	//vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
+#ifdef EXPORT
+	tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int simStep);
+	vector<vector<int > > firings; // matrix that holds binary spike data
+#else // if no EXPORT:
 	vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
-	//vector<int > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
+#endif // EXPORT
 
 	// function that reads wts from a file
 	void initParams(const std::string& inputFileName); 

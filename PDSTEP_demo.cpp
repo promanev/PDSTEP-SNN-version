@@ -1677,7 +1677,7 @@ void RagdollDemo::clientMoveAndDisplay()
 						break;
 					}
 
-					//m_ragdolls[0]->ActuateJoint(i / 2, fabs(sin(i*M_PI / 2)) + 1, targetAngle, ActuateTimeStep);
+					m_ragdolls[0]->ActuateJoint(i / 2, fabs(sin(i*M_PI / 2)) + 1, targetAngle, ActuateTimeStep);
 
 				}
 				// END UPDATE MOTORS

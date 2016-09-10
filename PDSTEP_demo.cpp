@@ -946,20 +946,20 @@ vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b,
 			if (i < Ne)
 			{
 				// no sensory input is taken into the calculations:
-				I[i] = ((float)(5 * distr(gen)));
+				//I[i] = ((float)(5 * distr(gen)));
 				// sensory input is taken + gaussian noise:
 				//I[i] = ((float)(5 * distr(gen))) + excGain * sensor_val[0] + excGain * sensor_val[1]; // gain 5 for excitatory neurons
 				// only sensory input, no noise:
-				//I[i] = excGain * sensor_val[0] + excGain * sensor_val[1]; //might have to introduce weights for connecting the sensors to all of the neurons
+				I[i] = excGain * sensor_val[0] + excGain * sensor_val[1]; //might have to introduce weights for connecting the sensors to all of the neurons
 			}
 			else
 			{
 				// no sensory input is taken into the calculations:
-				I[i] = ((float)(2 * distr(gen)));
+				//I[i] = ((float)(2 * distr(gen)));
 				// sensory + gaussian noise:
 				//I[i] = ((float)(2 * distr(gen))) + inhGain * sensor_val[0] + inhGain * sensor_val[1]; // gain 2 for inhibitory neurons
 				// only sensory:
-				//I[i] = inhGain * sensor_val[0] + inhGain * sensor_val[1];
+				I[i] = inhGain * sensor_val[0] + inhGain * sensor_val[1];
 			}
 		}
 

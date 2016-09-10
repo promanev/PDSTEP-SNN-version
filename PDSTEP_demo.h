@@ -123,8 +123,8 @@ public:
 	string m_inputFileName; 
 //============ SNN params ==============/
 // Network parameters:
-	int Ne = 16; // excitatory neurons count
-	int Ni = 4; // inhibitory neurons count
+	int Ne = 80; // excitatory neurons count
+	int Ni = 20; // inhibitory neurons count
 
 	// create Re and Ri arrays:
 	vector<float> Re;

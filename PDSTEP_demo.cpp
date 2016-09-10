@@ -914,7 +914,7 @@ vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b,
 	// number of time steps to integrate numerically:
 	float timeStep = 2.0f;
 	// number of time steps for SNN update:
-	int simT = 100; // 100 ts allows to generate outputs with 0.01 precision
+	int simT = 10; // 100 ts allows to generate outputs with 0.01 precision
 	int totalNeuronNum = a.size();
 	int Ne = (int)(0.8 * totalNeuronNum);
 	int Ni = (int)(0.2 * totalNeuronNum);
@@ -945,12 +945,20 @@ vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b,
 			// std::cout << "Mem.potential[" << i << "] = " << v[i];
 			if (i < Ne)
 			{
-				I[i] = ((float)(5 * distr(gen))) + excGain * sensor_val[0] + excGain * sensor_val[1]; // gain 5 for excitatory neurons
+				// no sensory input is taken into the calculations:
+				I[i] = ((float)(5 * distr(gen)));
+				// sensory input is taken + gaussian noise:
+				//I[i] = ((float)(5 * distr(gen))) + excGain * sensor_val[0] + excGain * sensor_val[1]; // gain 5 for excitatory neurons
+				// only sensory input, no noise:
 				//I[i] = excGain * sensor_val[0] + excGain * sensor_val[1]; //might have to introduce weights for connecting the sensors to all of the neurons
 			}
 			else
 			{
-				I[i] = ((float)(2 * distr(gen))) + inhGain * sensor_val[0] + inhGain * sensor_val[1]; // gain 2 for inhibitory neurons
+				// no sensory input is taken into the calculations:
+				I[i] = ((float)(2 * distr(gen)));
+				// sensory + gaussian noise:
+				//I[i] = ((float)(2 * distr(gen))) + inhGain * sensor_val[0] + inhGain * sensor_val[1]; // gain 2 for inhibitory neurons
+				// only sensory:
 				//I[i] = inhGain * sensor_val[0] + inhGain * sensor_val[1];
 			}
 		}
@@ -1012,8 +1020,8 @@ void RagdollDemo::initPhysics()
 	gContactProcessedCallback = myContactProcessedCallback; //Registers the collision
 
 	// initializing all of CTRNN params here: 
-	maxStep = 150; // simulation time
-	simT = 100; // SNN simulation time (each physics simulation step)
+	maxStep = 300; // simulation time
+	simT = 10; // SNN simulation time (each physics simulation step)
 	bodyCount = sizeof(IDs)/sizeof(IDs[0]);
 	num_input = 2;
 #ifdef TORSO
@@ -1532,7 +1540,6 @@ void RagdollDemo::clientMoveAndDisplay()
 	//cout << "Inside ClientMoveAndDisplay" << endl;
 	// vector of target angle values:
 	vector<double > targ_angs(num_output);
-	vector<int > outFired;
 	//BULLET note: simple dynamics world doesn't handle fixed-time-stepping
 	//Roman Popov note: timestep is set to bullet's internal tick = 1/60 of a second. This is done to create constancy between
 	//graphics ON/OFF versions of the robot. Actuation timestep is 5 * 1/60 of a second, as it removes movement jitter.
@@ -1670,7 +1677,7 @@ void RagdollDemo::clientMoveAndDisplay()
 						break;
 					}
 
-					m_ragdolls[0]->ActuateJoint(i / 2, fabs(sin(i*M_PI / 2)) + 1, targetAngle, ActuateTimeStep);
+					//m_ragdolls[0]->ActuateJoint(i / 2, fabs(sin(i*M_PI / 2)) + 1, targetAngle, ActuateTimeStep);
 
 				}
 				// END UPDATE MOTORS

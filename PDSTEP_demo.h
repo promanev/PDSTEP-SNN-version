@@ -93,7 +93,7 @@ public:
 #endif
 
 	//maximal amount of steps in simulations:
-	int maxStep; int simT;
+	int maxStep; int neur_sim_step;
 
 #ifdef TORSO
 	int IDs[8]; //CHANGE ACCORDING TO BODY PLAN; pointers to the body parts in contact
@@ -123,12 +123,11 @@ public:
 	string m_inputFileName; 
 //============ SNN params ==============/
 // Network parameters:
-	int Ne = 80; // excitatory neurons count
-	int Ni = 20; // inhibitory neurons count
+	int N = 20; // neuron count
 
-	// create Re and Ri arrays:
-	vector<float> Re;
-	vector<float> Ri;
+	//// create Re and Ri arrays:
+	//vector<float> Re;
+	//vector<float> Ri;
 	// and parameter vectors:
 	vector<float> a;
 	vector<float> b;
@@ -166,10 +165,10 @@ public:
 	// Main SNN function:
 	//vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
 #ifdef EXPORT
-	tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int simStep);
+	tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int neur_sim_step, int simStep);
 	vector<vector<int > > firings; // matrix that holds binary spike data
 #else // if no EXPORT:
-	vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
+	vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int neur_sim_step);
 #endif // EXPORT
 
 	// function that reads wts from a file

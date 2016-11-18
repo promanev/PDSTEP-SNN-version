@@ -750,25 +750,29 @@ public:
 		double stanceMemberZ = 1 / (1 + fabs(stanceTargZ - stanceFootPos.z())); //cout << "stanceMemberZ = " << stanceMemberZ << endl;
 		double pelvHeightMember = 1 / (1 + fabs( (initPelvisHeight - pelPos.y())  )); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 		//double result = pelvRotMember * pelvHeightMember * stanceAnklRotMemberAP * stanceAnklRotMemberML * targetMemberX * targetMemberY * targetMemberZ * stanceMemberX * stanceMemberY * stanceMemberZ;
-		double result = pelvRotMember * pelvHeightMember * targetMemberX * targetMemberY * targetMemberZ * stanceMemberX * stanceMemberY * stanceMemberZ;
+		// LAST WORKING VERSION:
+		// double result = pelvRotMember * pelvHeightMember * targetMemberX * targetMemberY * targetMemberZ * stanceMemberX * stanceMemberY * stanceMemberZ;
+		// JUST HEIGHT:
+		double result = pelvHeightMember;
 		//cout << "swingTargZ = " << swingTargZ << ", swingFootPos.z() = " << swingFootPos.z() << ", swingFootInitZ = " << swingFootInitZ << endl;
 		//cout << " Fitness of this SimStep is = " << result << endl;
 		//cout << "---------------------------------" << endl;
-		//term to penalize end of simulation pelvis displacement:
-		double pelvVelMember;
-		btVector3 pelvLinearVelocity;
-		if (SimulationStep > maxStep*0.75)
-		{
-			pelvLinearVelocity = p_pelvis->getLinearVelocity();
-			//cout << "Step = "<<SimulationStep<<". Pelv velocity X = " << pelvLinearVelocity.x() << " Y = " << pelvLinearVelocity.y() << " Z = " << pelvLinearVelocity.z() << endl;
-			pelvVelMember = (1 / (1 + fabs(pelvLinearVelocity.x())))*(1 / (1 + fabs(pelvLinearVelocity.y())))*(1 / (1 + fabs(pelvLinearVelocity.z())));
-			//cout << "PelvVelMember X = " << 1 / (1 + abs(pelvLinearVelocity.x())) << " Y = " << 1 / (1 + abs(pelvLinearVelocity.y())) << " Z = " << 1 / (1 + abs(pelvLinearVelocity.z())) << endl;
-			//cout << "Step = " << SimulationStep << ". pelvVelMem = " << pelvVelMember << endl;
-			//cout << "Fit.before = " << result << endl;
-			result = result * pelvVelMember;
-			//cout << "Fit. after = " << result << endl;
-		}
-		cout << "SimStep: " << SimulationStep << ", fit = " << result << endl;
+		
+		// //term to penalize end of simulation pelvis displacement:
+		// double pelvVelMember;
+		// btVector3 pelvLinearVelocity;
+		// if (SimulationStep > maxStep*0.75)
+		// {
+		// 	pelvLinearVelocity = p_pelvis->getLinearVelocity();
+		//	//cout << "Step = "<<SimulationStep<<". Pelv velocity X = " << pelvLinearVelocity.x() << " Y = " << pelvLinearVelocity.y() << " Z = " << pelvLinearVelocity.z() << endl;
+		//	pelvVelMember = (1 / (1 + fabs(pelvLinearVelocity.x())))*(1 / (1 + fabs(pelvLinearVelocity.y())))*(1 / (1 + fabs(pelvLinearVelocity.z())));
+		//	//cout << "PelvVelMember X = " << 1 / (1 + abs(pelvLinearVelocity.x())) << " Y = " << 1 / (1 + abs(pelvLinearVelocity.y())) << " Z = " << 1 / (1 + abs(pelvLinearVelocity.z())) << endl;
+		//	//cout << "Step = " << SimulationStep << ". pelvVelMem = " << pelvVelMember << endl;
+		//	//cout << "Fit.before = " << result << endl;
+		//	result = result * pelvVelMember;
+		//	//cout << "Fit. after = " << result << endl;
+		// }
+		// DEBUG: cout << "SimStep: " << SimulationStep << ", fit = " << result << endl;
 		return result;
 
 	}
@@ -781,16 +785,16 @@ public:
 		double PELV_HEIGHT = 0.3 + footHeight + height_leg / 30;
 		double avgTempFitness;
 
-		if (pelPos.y() < PELV_HEIGHT * 0.75)
+		if (pelPos.y() < PELV_HEIGHT * 0.5)
 		{
-			//avgTempFitness = tempFitness / maxStep;
-			avgTempFitness = tempFitness;
+			avgTempFitness = tempFitness / maxStep;
+			//avgTempFitness = tempFitness;
 			//save_1by1_file<double>(avgTempFitness, "fit.txt");
 			save_1by1_file(avgTempFitness,"fit.txt");
 //#ifndef TRAIN
-			cout << "Exit early due to fall. Curr height: " << pelPos.y() << " < 75% of Init height " << PELV_HEIGHT << " = " << PELV_HEIGHT*0.75 << endl;
-			cout << "Sim.Step: " << SimulationStep << " out of " << maxStep << ". Fitness = " << tempFitness << endl;
-			getchar();
+//			cout << "Exit early due to fall. Curr height: " << pelPos.y() << " < 75% of Init height " << PELV_HEIGHT << " = " << PELV_HEIGHT*0.75 << endl;
+//			cout << "Sim.Step: " << SimulationStep << " out of " << maxStep << ". Fitness = " << tempFitness << endl;
+//			getchar();
 //#endif
 			exit(0);
 		}
@@ -902,25 +906,20 @@ void RagdollDemo::initParams(const std::string& inputFileName)
 }
 
 #ifdef EXPORT
-tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int simStep)
+tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int neur_sim_step, int simStep)
 #else
-vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output)
+vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int neur_sim_step)
 #endif
 {
 	// some housekeeping variables:
-	// arrays for evaluating neuronal dynamics, one records the time step and the other that contains ids:
-//	vector<int > fireTime;
-//	vector<int > fireID;
 	// number of time steps to integrate numerically:
 	float timeStep = 2.0f;
-	// number of time steps for SNN update:
-	int simT = 10; // 100 ts allows to generate outputs with 0.01 precision
+	// get total number of neurons:
 	int totalNeuronNum = a.size();
-	int Ne = (int)(0.8 * totalNeuronNum);
-	int Ni = (int)(0.2 * totalNeuronNum);
+	// vector to keep track of inputs to each neuron:
 	vector<float > I(a.size()); // has to be generated each simulation step
-	int excGain = 5; // input gain for excitatory neurons
-	int inhGain = 2; // input gain for inhibitory neurons
+	int sens_gain = 20; 
+	int noise_gain = 5; 
 
 	// to generate normal random numbers:
 	random_device rd;
@@ -929,65 +928,60 @@ vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b,
 	// standard deviation affects the dispersion of generated values from the mean
 	normal_distribution<> distr(0, 1);
 
-	// 1st row - values of "v", 2nd row - values of "u", 3rd row - firing times of the output neurons
+	// 1st row - values of "v", 2nd row - values of "u", 3rd row - sum of spikes generated for each neuron
 	vector<vector<float > > output(3,vector<float >(totalNeuronNum));
 #ifdef EXPORT
 	vector<vector<int > > firings(2, vector<int >());
 #endif //EXPORT
 
 	// MAIN CYCLE:
-	for (int t = 0; t < simT; t++)
+	for (int t = 0; t < neur_sim_step; t++)
 	{
+		//cout << "Time " << t << ", sensor = " << sensor << endl;
 		//generate random thalamic input and find the neurons that have membrane potential > 30 (i.e. that fired):
 		// initialize thalamic input:
-		for (int i = 0; i < Ne + Ni; i++)
+		for (int i = 0; i < totalNeuronNum; i++)
 		{
 			// std::cout << "Mem.potential[" << i << "] = " << v[i];
-			if (i < Ne)
-			{
-				// no sensory input is taken into the calculations:
-				//I[i] = ((float)(5 * distr(gen)));
-				// sensory input is taken + gaussian noise:
-				I[i] = ((float)(5 * distr(gen))) + excGain * sensor_val[0] + excGain * sensor_val[1]; // gain 5 for excitatory neurons
-				// only sensory input, no noise:
-				//I[i] = excGain * sensor_val[0] + excGain * sensor_val[1]; //might have to introduce weights for connecting the sensors to all of the neurons
-			}
-			else
-			{
-				// no sensory input is taken into the calculations:
-				//I[i] = ((float)(2 * distr(gen)));
-				// sensory + gaussian noise:
-				I[i] = ((float)(2 * distr(gen))) + inhGain * sensor_val[0] + inhGain * sensor_val[1]; // gain 2 for inhibitory neurons
-				// only sensory:
-				//I[i] = inhGain * sensor_val[0] + inhGain * sensor_val[1];
-			}
+			// sensory input is taken + gaussian noise:
+			I[i] = ((float)(noise_gain * distr(gen))) + sens_gain * sensor_val[0] * w[i][w[i].size()-2] + sens_gain * sensor_val[1] * w[i][w[i].size() - 1];
+			//                                         There are two touch sensors: 1st weight is second to last                    2nd weight is the last                              
 		}
 
 		// detect fired neurons:
-		for (int i = 0; i < Ne + Ni; i++)
+		for (int i = 0; i < totalNeuronNum; i++)
 		{
 			if (v[i] > 30)
 			{
 #ifdef EXPORT
 				// first row records times when a neuron fires and accounts for the fact that neural network is simulated repeatedly throughout the physical simulation (simStep * simT)
-				firings[0].push_back(simStep*simT + t + 1);
+				firings[0].push_back(simStep*neur_sim_step + t + 1);
 				// record the neuron number, here as above the values are shifted by 1 for MATLAB (starts counting from 1, not 0):
 				firings[1].push_back(i+1);
 #endif //EXPORT
-				// record time when this neuron fired:
-				output[2][i] = t;
+				// update the number of spikes fired for current neuron:
+				output[2][i] += 1;
 				// reset membrane potential of neurons that have just fired:
 				v[i] = c[i];
 				u[i] = u[i] + d[i];
 				// update the influence I vector using the column of S that responds to the fired neuron:
-				for (int j = 0; j < Ne + Ni; j++)
+				for (int j = 0; j < totalNeuronNum; j++)
 				{
-					I[j] += w[j][i];
+					// signs of neurons are in the first column of the weight mtx 0 - minus, 1 - plus
+					// skip update, if the connection from current neuron to target == 0:
+					if (w[i][j] > 0)
+					{
+						I[j] += (w[i][0] - 0.5) / 0.5;
+						// sign is extracted from binary:
+						// 0 ---> (0 - 0.5)/0.5 = -0.5/0.5 = -1
+						// 1 ---> (1 - 0.5)/0.5 = 0.5/0.5 = 1
+						// since all meaningful weights are 1s, there is no need to actually multiply sign by weight
+					}
 				}
 			}
 		}
 		// integrate numerically membrane potential using two steps of 0.5 ms:
-		for (int k = 0; k < Ne + Ni; k++)
+		for (int k = 0; k < totalNeuronNum; k++)
 		{
 			for (int h = 0; h < timeStep; h++)
 			{
@@ -1020,8 +1014,8 @@ void RagdollDemo::initPhysics()
 	gContactProcessedCallback = myContactProcessedCallback; //Registers the collision
 
 	// initializing all of CTRNN params here: 
-	maxStep = 300; // simulation time
-	simT = 10; // SNN simulation time (each physics simulation step)
+	maxStep = 200; // simulation time
+	neur_sim_step = 50; // neural simulation time (per each physics simulation step)
 	bodyCount = sizeof(IDs)/sizeof(IDs[0]);
 	num_input = 2;
 #ifdef TORSO
@@ -1042,34 +1036,29 @@ void RagdollDemo::initPhysics()
 	firings.push_back(vector<int >()); firings.push_back(vector<int >());
 #endif //EXPORT
 	// initialize all of SNN params:
-	for (int i = 0; i < Ne+Ni; i++)
+	for (int i = 0; i < N; i++)
 	{
-		if (i < Ne)
-		{
-			Re.push_back(((float)rand() / (RAND_MAX + 1)));
-			a.push_back((float)0.02);
-			b.push_back((float)0.2);
-			c.push_back((float)(-65 + 15 * pow(Re[i], 2)));
-			d.push_back((float)(8 - 6 * pow(Re[i], 2)));
-
-			//v.push_back((float)(-65));
-			snn_state[0].push_back((float)(-65));
-			//u.push_back(v[i] * b[i]);
-			snn_state[1].push_back(snn_state[0][i] * b[i]);
-		}
-		else
-		{
-			Ri.push_back((float)rand() / (RAND_MAX + 1));
-			a.push_back((float)(0.02 + 0.08 * Ri[i - Ne]));
-			b.push_back((float)(0.25 - 0.05 * Ri[i - Ne]));
-			c.push_back((float)(-65));
-			d.push_back((float)2);
-
-			//v.push_back((float)-65);
-			snn_state[0].push_back((float)-65);
-			//u.push_back(v[i] * b[i]);
-			snn_state[1].push_back(snn_state[0][i] * b[i]);
-		}
+		// Types of neurons from Izhikevich 2004. Fig.1
+		//        a         b      c      d        I - preferrable input, not relevant here 
+		//pars = [0.02      0.2  -65      6       14; ...    % A regular spiking (RS) although Izhikevich 2003 gives d=8
+		//	      0.02      0.2  -50      2        0; ...    % C chattering
+		//        0.2       0.26 -65      0        -- ...    % H Class 2 excitable - firing rate directly reflects the input current
+		//                                                   % although description in the paper tells that this is Class1. 
+		//                                                   % However, model dynamics shows initial increase in fq that later relaxes 
+		//                                                   % to a lower value whereas Class 2 remains consistent.  
+		//float neuron_rand_param = (float)rand() / (RAND_MAX + 1);
+		// to standardize different simulations -> all neurons are Class2:
+		a.push_back((float)0.2);
+		b.push_back((float)0.26);
+		// c.push_back((float)(-65 + 15*sqrt(neuron_rand_param))); // sqrt biases neurons to chattering type, pow - to RS
+		// d.push_back((float)8 + 2*sqrt(neuron_rand_param));
+		c.push_back((float)(-65));
+		d.push_back((float)0);
+		//v.push_back((float)(-65));
+		snn_state[0].push_back((float)(-65));
+		//u.push_back(v[i] * b[i]);
+		snn_state[1].push_back(snn_state[0][i] * b[i]);
+		// empty vector for firings:
 		snn_state[2].push_back(0.0f);
 	}
 
@@ -1575,16 +1564,24 @@ void RagdollDemo::clientMoveAndDisplay()
 				}
 				//update neronal states:
 #ifdef EXPORT
-				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output, SimulationStep);
-				m_ragdolls[0]->save_2DInt(firings, "firings.txt");
+				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output, neur_sim_step,SimulationStep);
+				//m_ragdolls[0]->save_2DInt(firings, "firings.txt"); !!! removed for DEBUG only, restore later
 				firings.clear();				
 #else // if no EXPORT:
-				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output);
+				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, neur_sim_step, num_output);
 #endif // EXPORT
-				//extract values from output layer:
+				// convert spikes into motor commands by estimating the ratio of maximal firing rate:
+				// Chattering neuron has circa 15 spikes per 20 ms = 750 spikes per 1000 ms or 750 Hz (estimated using izhikevich matlab code with I=100)
+				// RS have circa 5.5 spikes per 20 ms = 275 spikes per 1000 ms
+				// Class2 at I=100 - 1250 Hz, at I=22 - 400 Hz (8 per 20 ms), I=32 - 500-550 Hz
+				double max_fir_rate = 400.0 * (neur_sim_step / 1000.0); // adjust the max fir.rate to the actual neural sim time
 				for (int z = 0; z < num_output; z++)
 				{
-					targ_angs[z] = (double)(2 * snn_state[2][Ne - z] - 100) / 100; // map [0,99] to [-1,1]
+					//targ_angs[z] = (double)(2 * snn_state[2][N - z] - 100) / 100; // map [0,99] to [-1,1]
+					targ_angs[z] = (snn_state[2][N - (z+1)] / max_fir_rate) * 2 - 1; // [0,1]-->[-1,1]
+					if (targ_angs[z] > 1.0)
+						targ_angs[z] = 1.0;
+					//cout << "Motor #" << z + 1 << " gets value from neuron #" << N - z << " = " << snn_state[2][N - (z+1)] << "/" << max_fir_rate << " = " << targ_angs[z] << endl;
 				}
 				// for all motors
 				for (int i = 0; i < num_output; i++)
@@ -1710,6 +1707,9 @@ void RagdollDemo::clientMoveAndDisplay()
 #endif
 #endif
 				//if check is passed, continue the simulation and fitness calculation:;
+				// !!! DEBUG, remove later
+				m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
+				// !!! DEBUG
 				tempFitness += m_ragdolls[0]->onlineFitness(SimulationStep, maxStep);
 
 #ifdef JOINT
@@ -1736,6 +1736,7 @@ void RagdollDemo::clientMoveAndDisplay()
 #endif
 				// Increase the simulation time step counter:
 				SimulationStep++;
+				//getchar(); // remove this after debug
 
 #ifndef TRAIN //if DEMO!!!
 				//Stopping simulation in the end of time for DEMO robots (paused right before the end)
@@ -1762,6 +1763,13 @@ void RagdollDemo::clientMoveAndDisplay()
 					//getchar();
 					
 #endif
+					//!!! TO DEBUG ONLY. REMOVE FOR EXPORT LATER
+					double fitval = tempFitness / SimulationStep;
+					ofstream outputFile;
+					outputFile.open("fit.txt", ios_base::app);
+					outputFile << fitval << endl;
+					outputFile.close();
+					//!!! TO DEBUG ONLY
 					exit(0);
 				}
 #else // IF TRAIN:

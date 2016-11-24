@@ -99,11 +99,15 @@ public:
 	int IDs[8]; //CHANGE ACCORDING TO BODY PLAN; pointers to the body parts in contact
 	int touches[8]; //record if corresponding body part is in contact, +1 to touches bcuz ground is an object too
 	btVector3 touchPoints[8];//locations of contact points
+	int bodyCount;
+	btVector3 forces[8];
 #else
 #ifndef KNEES
 	int IDs[7]; //CHANGE ACCORDING TO BODY PLAN; pointers to the body parts in contact
 	int touches[7]; //record if corresponding body part is in contact, +1 to touches bcuz ground is an object too
 	btVector3 touchPoints[7];//locations of contact points
+	int bodyCount;
+	btVector3 forces[7];
 #else // KNEES
 	int IDs[9]; //CHANGE ACCORDING TO BODY PLAN; pointers to the body parts in contact
 	int touches[9]; //record if corresponding body part is in contact, +1 to touches bcuz ground is an object too
@@ -123,11 +127,7 @@ public:
 	string m_inputFileName; 
 //============ SNN params ==============/
 // Network parameters:
-	int N = 20; // neuron count
-
-	//// create Re and Ri arrays:
-	//vector<float> Re;
-	//vector<float> Ri;
+	int N = 50; // neuron count
 	// and parameter vectors:
 	vector<float> a;
 	vector<float> b;
@@ -139,7 +139,6 @@ public:
 	vector<float> u;
 	// SNN state matrix: 1st row - v, 2nd - u, 3rd - firing times:
 	vector<vector<float > > snn_state;
-
 	// number of input neurons (= number of sensors):
 	int num_input;
 	//number of output neurons (= number of joint motors):
@@ -161,14 +160,14 @@ public:
 	vector<vector< double > > joint_val;//number of joints x time
 #endif
 	//vector of sensor values:
-	vector< int > sensor_val;
+	vector<double > sensor_val;
 	// Main SNN function:
 	//vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
 #ifdef EXPORT
-	tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int neur_sim_step, int simStep);
+	tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<double > sensor_val, int num_output, int neur_sim_step, int simStep);
 	vector<vector<int > > firings; // matrix that holds binary spike data
 #else // if no EXPORT:
-	vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output, int neur_sim_step);
+	vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<double > sensor_val, int num_output, int neur_sim_step);
 #endif // EXPORT
 
 	// function that reads wts from a file

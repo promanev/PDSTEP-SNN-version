@@ -216,44 +216,44 @@ public:
 			/*Make a circle with a 0.9 radius at (0,0,0) with RGB color (1,0,0).*/
 			/*gDebugDrawer.drawSphere(btVector3(0.,0.,0.), 0.9, btVector3(1., 0., 0.));*/
 		}
-// DRAW TARGETS:
-//#ifdef MALE
-	//	double avBH = 181.0;
-	//	double avBM = 78.4;
-	//	double height_pelvis = 26.4 + 0.0473*avBM - 0.0311*avBH;
-	//	double length_foot = 3.8 + 0.013*avBM + 0.119*avBH;
-	//	double height_thigh = 4.26 - 0.0183*avBM + 0.24*avBH;
-	//	double height_shank = -16.0 + 0.0218*avBM + 0.321*avBH;
-	//	double height_leg = -11.74 + 0.0035*avBM + 0.561*avBH; // thigh + shank
-//#else //Female:
-		double avBH = 169.0;
-		double avBM = 75.4;
-		double height_pelvis = 21.4 + 0.0146*avBM - 0.005*avBH;
-		double length_foot = 7.39 + 0.0311*avBM + 0.0867*avBH;
-		double height_thigh = -26.8 - 0.0725*avBM + 0.436*avBH;
-		double height_shank = -7.21 - 0.0618*avBM + 0.308*avBH;
-		double height_leg = height_thigh + height_shank; // thigh + shank
+//// DRAW TARGETS:
+////#ifdef MALE
+//	//	double avBH = 181.0;
+//	//	double avBM = 78.4;
+//	//	double height_pelvis = 26.4 + 0.0473*avBM - 0.0311*avBH;
+//	//	double length_foot = 3.8 + 0.013*avBM + 0.119*avBH;
+//	//	double height_thigh = 4.26 - 0.0183*avBM + 0.24*avBH;
+//	//	double height_shank = -16.0 + 0.0218*avBM + 0.321*avBH;
+//	//	double height_leg = -11.74 + 0.0035*avBM + 0.561*avBH; // thigh + shank
+////#else //Female:
+//		double avBH = 169.0;
+//		double avBM = 75.4;
+//		double height_pelvis = 21.4 + 0.0146*avBM - 0.005*avBH;
+//		double length_foot = 7.39 + 0.0311*avBM + 0.0867*avBH;
+//		double height_thigh = -26.8 - 0.0725*avBM + 0.436*avBH;
+//		double height_shank = -7.21 - 0.0618*avBM + 0.308*avBH;
+//		double height_leg = height_thigh + height_shank; // thigh + shank
+////#endif
+//
+//#ifndef TRAIN
+//		double initPelvisHeight = 0.3 + (length_foot / 60)*0.375 + height_leg / 30;
+//		double leftTargZ = initPelvisHeight / 1.5; //step length = 1/3 of body height, just like in humans
+//		double leftTargX = height_pelvis / 60;// there should be no movement along X-axis, so the foot should maintain its initial pos along x-axis
+//		double rightTargZ = initPelvisHeight / 1.5; // now have both feet reach out for those targets.
+//		double rightTargX = -height_pelvis / 60;
+//		double leftTargY = 0.3 + (length_foot / 60) * 0.375;
+//		double rightTargY = 0.3 + (length_foot / 60) * 0.375;
+//
+//		btVector3 left = btVector3(btScalar(leftTargX), btScalar(leftTargY), btScalar(leftTargZ));
+//		btVector3 right = btVector3(btScalar(rightTargX), btScalar(rightTargY), btScalar(rightTargZ));
+//		btVector3 leftInitPos = btVector3(btScalar(height_pelvis / 60), btScalar(0.3 + (length_foot / 60)*0.375), btScalar(0));
+//		btVector3 rightInitPos = btVector3(btScalar(-height_pelvis / 60), btScalar(0.3 + (length_foot / 60)*0.375), btScalar(0));
+//
+//		gDebugDrawer.drawSphere(left, 0.4, btVector3(0., 1., 1.));
+//		gDebugDrawer.drawSphere(right, 0.4, btVector3(1., 1., 0.));
+//		gDebugDrawer.drawSphere(leftInitPos, 0.4, btVector3(0.7, 1., 1.));
+//		gDebugDrawer.drawSphere(rightInitPos, 0.4, btVector3(1., 1., 0.7));
 //#endif
-
-#ifndef TRAIN
-		double initPelvisHeight = 0.3 + (length_foot / 60)*0.375 + height_leg / 30;
-		double leftTargZ = initPelvisHeight / 1.5; //step length = 1/3 of body height, just like in humans
-		double leftTargX = height_pelvis / 60;// there should be no movement along X-axis, so the foot should maintain its initial pos along x-axis
-		double rightTargZ = initPelvisHeight / 1.5; // now have both feet reach out for those targets.
-		double rightTargX = -height_pelvis / 60;
-		double leftTargY = 0.3 + (length_foot / 60) * 0.375;
-		double rightTargY = 0.3 + (length_foot / 60) * 0.375;
-
-		btVector3 left = btVector3(btScalar(leftTargX), btScalar(leftTargY), btScalar(leftTargZ));
-		btVector3 right = btVector3(btScalar(rightTargX), btScalar(rightTargY), btScalar(rightTargZ));
-		btVector3 leftInitPos = btVector3(btScalar(height_pelvis / 60), btScalar(0.3 + (length_foot / 60)*0.375), btScalar(0));
-		btVector3 rightInitPos = btVector3(btScalar(-height_pelvis / 60), btScalar(0.3 + (length_foot / 60)*0.375), btScalar(0));
-
-		gDebugDrawer.drawSphere(left, 0.4, btVector3(0., 1., 1.));
-		gDebugDrawer.drawSphere(right, 0.4, btVector3(1., 1., 0.));
-		gDebugDrawer.drawSphere(leftInitPos, 0.4, btVector3(0.7, 1., 1.));
-		gDebugDrawer.drawSphere(rightInitPos, 0.4, btVector3(1., 1., 0.7));
-#endif
 
 	}
 	// end "added to the demo"

@@ -690,24 +690,120 @@ public:
 
 	double onlineFitness(int SimulationStep, int maxStep)
 	{
-		double initPelvisHeight = 0.3 + length_foot / 60 + height_leg / 30;
-		btRigidBody * p_pelvis = m_bodies[BODYPART_PELVIS];
-		btVector3 pelPos = p_pelvis->getCenterOfMassPosition();
-		double result, pelvHeightMember;
+		// initial body segment positions:
+		// PELVIS:
+		double initPelvisX = 0.0;
+		double initPelvisY = 0.3 + length_foot / 60 + height_leg / 30;
+		double initPelvisZ = 0.0;
+		// LEFT THIGH:
+		double initLThighX = height_pelvis / 60;
+		double initLThighY = 0.3 + footHeight * 2 + height_shank / 30 + height_thigh / 60;
+		double initLThighZ = 0.0;
+		// RIGHT THIGH:
+		double initRThighX = height_pelvis / 60;
+		double initRThighY = 0.3 + footHeight * 2 + height_shank / 30 + height_thigh / 60;
+		double initRThighZ = 0.0;
+		// LEFT SHANK:
+		double initLShankX = height_pelvis / 60;
+		double initLShankY = 0.3 + footHeight * 2 + height_shank / 60;
+		double initLShankZ = 0.0;
+		// RIGHT SHANK:
+		double initRShankX = height_pelvis / 60;
+		double initRShankY = 0.3 + footHeight * 2 + height_shank / 60;
+		double initRShankZ = 0.0;
+		// LEFT FOOT:
+		double initLFootX = height_pelvis / 60;
+		double initLFootY = 0.3 + footHeight;
+		double initLFootZ = 0.0;
+		// RIGHT FOOT:
+		double initRFootX = - height_pelvis / 60;
+		double initRFootY = 0.3 + footHeight;
+		double initRFootZ = 0.0;
 
-		if (SimulationStep < maxStep / 2)
+		btRigidBody * p_pelvis = m_bodies[BODYPART_PELVIS];
+		btRigidBody * p_lthigh = m_bodies[BODYPART_LEFT_THIGH];
+		btRigidBody * p_rthigh = m_bodies[BODYPART_RIGHT_THIGH];
+		btRigidBody * p_lshank = m_bodies[BODYPART_LEFT_SHANK];
+		btRigidBody * p_rshank = m_bodies[BODYPART_RIGHT_SHANK];
+		btRigidBody * p_lfoot = m_bodies[BODYPART_LEFT_FOOT];
+		btRigidBody * p_rfoot = m_bodies[BODYPART_RIGHT_FOOT];
+
+		btVector3 pelPos = p_pelvis->getCenterOfMassPosition();
+		btVector3 lthighPos = p_lthigh->getCenterOfMassPosition();
+		btVector3 rthighPos = p_rthigh->getCenterOfMassPosition();
+		btVector3 lshankPos = p_lshank->getCenterOfMassPosition();
+		btVector3 rshankPos = p_rshank->getCenterOfMassPosition();
+		btVector3 lfootPos = p_lfoot->getCenterOfMassPosition();
+		btVector3 rfootPos = p_rfoot->getCenterOfMassPosition();
+
+		double result;
+		double max_disp=10; // arbitrary chosen maximum displacement (should test this or find other way to justify this choice)
+							// robot height is 3.2, so this is three heights
+		//cout << "Simstep = " << SimulationStep << endl;
+
+		// time when the movement cue is presented:
+		int cue_time;
+
+// if it's just standing experiment -> make a sure there is never a switch between fitness fcns:
+#ifdef STAND
+		cue_time = maxStep+1;
+#endif
+
+// cue at the 50th simstep
+#ifdef TRAIN50
+		cue_time = maxStep / 4;
+#endif
+// cue at the 100th simstep
+#ifdef TRAIN100
+		cue_time = maxStep / 2;
+#endif
+// cue at the 150th simstep
+#ifdef TRAIN150
+		cue_time = 3 * maxStep / 4;
+#endif
+
+		if (SimulationStep < cue_time)
 		{
 			//cout << "Since SimStep " << SimulationStep << " < maxStep/2 " << maxStep / 2 << ", I am keeping the initial pelvis height" << endl;
-			pelvHeightMember = exp(-(initPelvisHeight - pelPos.y())); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			// Get pelvis part of fitness:
+			result = 1/(1+fabs(initPelvisX - pelPos.x()) ) * 1/(1+fabs(initPelvisY - pelPos.y()) ) * 1/(1+fabs(initPelvisZ - pelPos.z()) ); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			//cout << "Pelvis. Fitness = " << result << endl;
+			
+			// LTHIGH:
+			result = result * 1/(1+fabs(initLThighX - lthighPos.x()) ) * 1/(1+fabs(initLThighY - lthighPos.y()) ) * 1/(1+fabs(initLThighZ - lthighPos.z()) ); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			//cout << "LThigh. Fitness = " << result << endl;
+			
+			// RTHIGH:
+			result = result * 1/(1+fabs(initRThighX - rthighPos.x()) ) * 1/(1+fabs(initRThighY - rthighPos.y()) ) * 1/(1+fabs(initRThighZ - rthighPos.z()) ); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			//cout << "RThigh. Fitness = " << result << endl;
+			
+			// LSHANK:
+			result = result * 1/(1+fabs(initLShankX - lshankPos.x()) ) * 1/(1+fabs(initLShankY - lshankPos.y()) ) * 1/(1+fabs(initLShankZ - lshankPos.z()) ); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			//cout << "X-axis = exp(-" << initLShankX << " - " << fabs(lshankPos.x()) << " = " << 1 / (1 + fabs(initLShankX - lshankPos.x())) << endl;
+			//cout << "Y-axis = exp(-" << initLShankY << " - " << fabs(lshankPos.y()) << " = " << 1 / (1 + fabs(initLShankY - lshankPos.y())) << endl;
+			//cout << "Z-axis = exp(-" << initLShankZ << " - " << fabs(lshankPos.z()) << " = " << 1 / (1 + fabs(initLShankZ - lshankPos.z())) << endl;
+
+			//cout << "LShank. Fitness = " << 1 / (1 + fabs(initLShankX - lshankPos.x())) << " * " << 1 / (1 + fabs(initLShankY - lshankPos.y())) << " * " << 1 / (1 + fabs(initLShankZ - lshankPos.z())) << " = "<< result << endl;
+			
+			// RSHANK:
+			result = result * 1/(1+fabs(initRShankX - fabs(rshankPos.x()) )) * 1/(1+fabs(initRShankY - fabs(rshankPos.y()) )) * 1/(1+fabs(initRShankZ - fabs(rshankPos.z()) )); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			//cout << "RShank. Fitness = " << result << endl;
+			
+			// LFOOT:
+			result = result * 1/(1+fabs(initLFootX - fabs(lfootPos.x()) )) * 1/(1+fabs(initLFootY - fabs(lfootPos.y()) )) * 1/(1+fabs(initLFootZ - fabs(lfootPos.z()) )); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			//cout << "LFoot. Fitness = " << result << endl;
+			
+			// RFOOT:
+			result = result * 1/(1+fabs(initRFootX - fabs(rfootPos.x()) )) * 1/(1+fabs(initRFootY - fabs(rfootPos.y()) )) * 1/(1+fabs(initRFootZ - fabs(rfootPos.z()) )); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			//cout << "RFoot. Fitness = " << result << endl;
 			//cout << "Curr. height = " << pelPos.y() << ", fitness = " << pelvHeightMember << endl;
-			result = pelvHeightMember;
+			
 		}
 		else
 		{
 			//cout << "Since SimStep " << SimulationStep << " > maxStep/2 " << maxStep / 2 << ", I am maximizing Z-displacement" << endl;
-			pelvHeightMember = fabs(pelPos.z()); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			result = exp(-(max_disp - fabs(pelPos.z()))); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 			//cout << "Curr. height = " << pelPos.z() << ", fitness = " << pelvHeightMember << endl;
-			result = pelvHeightMember;
 		}
 
 		// DEBUG: cout << "SimStep: " << SimulationStep << ", fit = " << result << endl;
@@ -833,8 +929,11 @@ void load_data(const string& file_name, vector<vector<float > >& data) {
 }
 
 // hardcode the file name here:
-RagdollDemo::RagdollDemo() :m_inputFileName("weights.txt")
+RagdollDemo::RagdollDemo() :m_inputFileName("weights.txt"), m_firingsFileName("gate_firings.txt")
 {}
+//RagdollDemo::RagdollDemo() : m_firingsFileName("firings.txt")
+//{}
+
 // execute reading:
 void RagdollDemo::initParams(const std::string& inputFileName)
 {
@@ -843,9 +942,9 @@ void RagdollDemo::initParams(const std::string& inputFileName)
 }
 
 #ifdef EXPORT
-tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<double > sensor_val, int num_output, int neur_sim_step, int simStep)
+tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<vector<float > > gate_firings, vector<double > sensor_val, int num_output, int neur_sim_step, int simStep)
 #else
-vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<double > sensor_val, int num_output, int neur_sim_step)
+vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<vector<float > > gate_firings, vector<double > sensor_val, int num_output, int neur_sim_step)
 #endif
 {
 	// some housekeeping variables:
@@ -901,10 +1000,22 @@ vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b,
 			//I[i] = ((float)(noise_gain * distr(gen))) + sens_gain * sensor_val[0] * w[i][w[i].size()-3] + sens_gain * sensor_val[1] * w[i][w[i].size() - 2] + height_sens_gain * sensor_val[2] * w[i][w[i].size()-1];
 			// no noise:
 #ifdef HS
+
+#ifdef STAND
+			I[i] = sens_gain * sensor_val[0] * w[i][w[i].size() - 3] + sens_gain * sensor_val[1] * w[i][w[i].size() - 2] + height_sens_gain * sensor_val[2] * w[i][w[i].size() - 1];
+#else // STAND
 			I[i] = cue_gain * sensor_val[0] * w[i][w[i].size() - 4] + sens_gain * sensor_val[1] * w[i][w[i].size() - 3] + sens_gain * sensor_val[2] * w[i][w[i].size() - 2] + height_sens_gain * sensor_val[3] * w[i][w[i].size() - 1];
+#endif // STAND
+
 			//                                         There are two touch sensors: 1st weight is second to last                    2nd weight is the last                          
 #else // No height sensor
+
+#ifdef STAND
+			I[i] = sens_gain * sensor_val[0] * w[i][w[i].size() - 2] + sens_gain * sensor_val[1] * w[i][w[i].size() - 1];
+#else // STAND
 			I[i] = cue_gain * sensor_val[0] * w[i][w[i].size() - 3] + sens_gain * sensor_val[1] * w[i][w[i].size() - 2] + sens_gain * sensor_val[2] * w[i][w[i].size() - 1];
+#endif // STAND
+
 #endif
 			
 		}
@@ -920,8 +1031,11 @@ vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b,
 				// record the neuron number, here as above the values are shifted by 1 for MATLAB (starts counting from 1, not 0):
 				firings[1].push_back(i+1);
 #endif //EXPORT
-				// update the number of spikes fired for current neuron:
-				output[2][i] += 1;
+				// USE LAST 40 TIME STEPS TO CALCULATE MOTOR OUTPUT:
+				if (t > 60)
+					// update the number of spikes fired for current neuron:
+					output[2][i] += 1;
+
 				// reset membrane potential of neurons that have just fired:
 				v[i] = c[i];
 				u[i] = u[i] + d[i];
@@ -975,8 +1089,8 @@ void RagdollDemo::initPhysics()
 	gContactProcessedCallback = myContactProcessedCallback; //Registers the collision
 
 	// initializing all of CTRNN params here: 
-	maxStep = 150; // simulation time
-	neur_sim_step = 50; // neural simulation time (per each physics simulation step)
+	maxStep = 200; // simulation time
+	neur_sim_step = 100; // neural simulation time (per each physics simulation step)
 	bodyCount = sizeof(IDs)/sizeof(IDs[0]);
 	num_input = 2;
 #ifdef TORSO
@@ -1083,6 +1197,40 @@ void RagdollDemo::initPhysics()
 	//READ WEIGHTS:
 	// from input file into var called 'w': 
 	load_data(m_inputFileName, w);
+	// load firings:
+
+	load_data(m_firingsFileName, gate_firings);
+	// convert 1D vector of firings into a 2D binary matrix of spikes (neuron_number X max_t) with 1s for spikes:
+	vector<vector<float > > gate_firings_2D;
+	// fill the 2D vector with zeros:
+	for (int idx1 = 0; idx1 < N; idx1++)
+	{
+		gate_firings_2D.push_back(vector<float>());
+		for (int idx2 = 0; idx2 < maxStep * neur_sim_step; idx2++)
+		{
+			gate_firings_2D[idx1].push_back(0.0);
+		}
+	}
+	// now put ones:
+	int curr_neur_idx;
+	int curr_sim_time;
+	for (int idx1 = 0; idx1 < gate_firings[0].size(); idx1 = idx1 + 2)
+	{
+		curr_sim_time = gate_firings[0][idx1];
+		curr_neur_idx = gate_firings[0][idx1 + 1];
+		gate_firings_2D[curr_neur_idx][curr_sim_time] = 1.0;
+	}
+
+	//// DEBUG. Print out the resulting gate firings in 2D:
+	//for (int idx1 = 0; idx1 < N; idx1++)
+	//{
+	//	for (int idx2 = 0; idx2 < maxStep * neur_sim_step; idx2++)
+	//	{
+	//		cout << gate_firings_2D[idx1][idx2] << " ";
+	//	}
+	//	cout << endl;
+	//}
+
 //END ADDED
 	// Setup the basic world
 	setTexturing(true);
@@ -1175,8 +1323,12 @@ void RagdollDemo::stepPhysics(float ms)
 				// Populate sensor_val for the first update of SNN:
 				if (SimulationStep == 0)
 				{
+
+#ifndef STAND // if not just stand, but stand then fall:
 					// first push the cue sensor value:
 					sensor_val.push_back(0.0);
+#endif
+
 					// then values for binary touch sensors:
 					for (int j = 0; j < num_input; j++)
 					{
@@ -1189,11 +1341,11 @@ void RagdollDemo::stepPhysics(float ms)
 				}
 				//update neronal states:
 #ifdef EXPORT
-				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output, neur_sim_step, SimulationStep);
+				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, gate_firings_2D, sensor_val, num_output, neur_sim_step, SimulationStep);
 				m_ragdolls[0]->save_2DInt(firings, "firings.txt");
 				firings.clear();
 #else // if no EXPORT:
-				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output, neur_sim_step);
+				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, gate_firings_2D, sensor_val, num_output, neur_sim_step);
 #endif // EXPORT
 				// convert spikes into motor commands by estimating the ratio of maximal firing rate:
 				// Chattering neuron has circa 15 spikes per 20 ms = 750 spikes per 1000 ms or 750 Hz (estimated using izhikevich matlab code with I=100)
@@ -1207,8 +1359,8 @@ void RagdollDemo::stepPhysics(float ms)
 #else //HS
 				double total_max_input = 30.0 + 30.0 + 30.0 + N;
 #endif //HS
-
-				double max_fir_rate = (0.3*total_max_input) * (neur_sim_step / 1000.0); // adjust the max fir.rate to the actual neural sim time
+				double neur_steps_used = 40.0;
+				double max_fir_rate = (11 * total_max_input + 166.65) * (neur_steps_used / 1000.0); // adjust the max fir.rate to the actual neural sim time; use only last 40 ms of 100 simulated from neural simulation
 				double forward_effort, backward_effort;
 				int motor_count = 0;
 				for (int z = 0; z < 2 * num_output; z = z + 2)
@@ -1216,11 +1368,13 @@ void RagdollDemo::stepPhysics(float ms)
 					//targ_angs[z] = (double)(2 * snn_state[2][N - z] - 100) / 100; // map [0,99] to [-1,1]
 					forward_effort = (snn_state[2][N - (z + 1)] / max_fir_rate);
 					backward_effort = (snn_state[2][N - (z + 2)] / max_fir_rate);
+					//cout << "Forward effort = "  << snn_state[2][N - (z+1)] << "/" << max_fir_rate << " = " << forward_effort << endl;
+					//cout << "Backward effort = " << snn_state[2][N - (z + 2)] << "/" << max_fir_rate << " = " << backward_effort << endl;
 					//cout << "Forward = " << forward_effort << ", backward = " << backward_effort << "; [" << N - z << "," << N - z - 1 << "] neurons" << endl;
 					targ_angs[motor_count] = (forward_effort - backward_effort);
 					if (targ_angs[motor_count] > 1.0)
 						targ_angs[motor_count] = 1.0;
-					//cout << "Motor #" << z + 1 << " gets value from neuron #" << N - z << " = " << snn_state[2][N - (z+1)] << "/" << max_fir_rate << " = " << targ_angs[z] << endl;
+					
 					//cout << "Motor #" << z + 1 << " gets value " << targ_angs[motor_count] << endl;
 					motor_count++;
 				}
@@ -1343,14 +1497,24 @@ void RagdollDemo::stepPhysics(float ms)
 #endif 
 #ifndef COM
 #ifndef EXPORT
-				// Check if robot is still upright:
+#ifndef STAND
+				if (SimulationStep<maxStep/2)
+					// Check if robot is still upright:
+					m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
+#else // STAND
 				m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
-#endif
-#endif
-				//if check is passed, continue the simulation and fitness calculation:;
-				// !!! DEBUG, remove later
+#endif // STAND
+#endif // EXPORT
+#endif // COM
+
+#ifndef STAND
+				if (SimulationStep<maxStep / 2)
+					//if check is passed, continue the simulation and fitness calculation:;
+					m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
+#else // STAND
 				m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
-				// !!! DEBUG
+#endif // STAND
+				// update fitness: 
 				tempFitness += m_ragdolls[0]->onlineFitness(SimulationStep, maxStep);
 
 #ifdef JOINT
@@ -1364,11 +1528,28 @@ void RagdollDemo::stepPhysics(float ms)
 #endif
 				//Get new sensor vals:
 				sensor_val.clear();
+#ifndef STAND
+				int cue_time;
+				// original stand then fall setup (cue at the 50% of the simulation)
+				// cue at the 50th simstep
+#ifdef TRAIN50
+				cue_time = maxStep / 4;
+#endif
+				// cue at the 100th simstep
+#ifdef TRAIN100
+				cue_time = maxStep / 2;
+#endif
+				// cue at the 150th simstep
+#ifdef TRAIN150
+				cue_time = 3 * maxStep / 4;
+#endif
 				// Cue sensor is quiet until matStep/2:
-				if (SimulationStep < maxStep / 2)
+				if (SimulationStep < cue_time)
 					sensor_val.push_back(0.0);
 				else
 					sensor_val.push_back(1.0);
+#endif // STAND
+
 				// get binary touch vals:
 				for (int j = 0; j < num_input; j++)
 				{
@@ -1505,8 +1686,11 @@ void RagdollDemo::clientMoveAndDisplay()
 				// Populate sensor_val for the first update of CTRNN:
 				if (SimulationStep == 0)
 				{
+#ifndef STAND
 					// first push cue sensor value:
 					sensor_val.push_back(0.0);
+#endif // STAND
+
 					// and binary sensors:
 					for (int j = 0; j < num_input; j++)
 					{
@@ -1519,11 +1703,11 @@ void RagdollDemo::clientMoveAndDisplay()
 				}
 				//update neronal states:
 #ifdef EXPORT
-				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output, neur_sim_step,SimulationStep);
+				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, gate_firings_2D, sensor_val, num_output, neur_sim_step,SimulationStep);
 				m_ragdolls[0]->save_2DInt(firings, "firings.txt");
 				firings.clear();				
 #else // if no EXPORT:
-				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, neur_sim_step, num_output);
+				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, gate_firings_2D, sensor_val, neur_sim_step, num_output);
 #endif // EXPORT
 				// convert spikes into motor commands by estimating the ratio of maximal firing rate:
 				// Chattering neuron has circa 15 spikes per 20 ms = 750 spikes per 1000 ms or 750 Hz (estimated using izhikevich matlab code with I=100)
@@ -1537,20 +1721,22 @@ void RagdollDemo::clientMoveAndDisplay()
 #else //HS
 				double total_max_input = 30.0 + 30.0 + 30.0 + N;
 #endif //HS
-				// touch sensor gains 30 + 30, height sensor gain 30, and 50 neurons
-				double max_fir_rate = (0.3*total_max_input) * (neur_sim_step / 1000.0); // adjust the max fir.rate to the actual neural sim time
+				double neur_steps_used = 40.0;
+				double max_fir_rate = (11 * total_max_input + 166.65) * (neur_steps_used / 1000.0); // adjust the max fir.rate to the actual neural sim time; use only last 40 ms of 100 simulated from neural simulation
 				double forward_effort, backward_effort;
 				int motor_count = 0;
-				for (int z = 0; z < 2*num_output; z=z+2)
+				for (int z = 0; z < 2 * num_output; z = z + 2)
 				{
 					//targ_angs[z] = (double)(2 * snn_state[2][N - z] - 100) / 100; // map [0,99] to [-1,1]
 					forward_effort = (snn_state[2][N - (z + 1)] / max_fir_rate);
 					backward_effort = (snn_state[2][N - (z + 2)] / max_fir_rate);
+					//cout << "Forward effort = " << snn_state[2][N - (z + 1)] << "/" << max_fir_rate << " = " << forward_effort << endl;
+					//cout << "Backward effort = " << snn_state[2][N - (z + 2)] << "/" << max_fir_rate << " = " << backward_effort << endl;
 					//cout << "Forward = " << forward_effort << ", backward = " << backward_effort << "; [" << N - z << "," << N - z - 1 << "] neurons" << endl;
 					targ_angs[motor_count] = (forward_effort - backward_effort);
 					if (targ_angs[motor_count] > 1.0)
 						targ_angs[motor_count] = 1.0;
-					//cout << "Motor #" << z + 1 << " gets value from neuron #" << N - z << " = " << snn_state[2][N - (z+1)] << "/" << max_fir_rate << " = " << targ_angs[z] << endl;
+
 					//cout << "Motor #" << z + 1 << " gets value " << targ_angs[motor_count] << endl;
 					motor_count++;
 				}
@@ -1671,8 +1857,15 @@ void RagdollDemo::clientMoveAndDisplay()
 					swingFootCOMtrace[SimulationStep] = m_ragdolls[0]->getCOMposition(BODYPART_LEFT_FOOT);
 			    }
 #endif 
-				// Check if robot is still upright:
+
+#ifndef STAND
+				if (SimulationStep<maxStep / 2)
+					// Check if robot is still upright:
+					m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
+#else
 				m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
+#endif
+
 				//if check is passed, continue the simulation and fitness calculation:;
 				tempFitness += m_ragdolls[0]->onlineFitness(SimulationStep, maxStep);
 
@@ -1687,11 +1880,29 @@ void RagdollDemo::clientMoveAndDisplay()
 #endif
 				//Get new sensor vals:
 				sensor_val.clear();
+
+#ifndef STAND
+				int cue_time;
+				// original stand then fall setup (cue at the 50% of the simulation)
+				// cue at the 50th simstep
+#ifdef TRAIN50
+				cue_time = maxStep / 4;
+#endif
+				// cue at the 100th simstep
+#ifdef TRAIN100
+				cue_time = maxStep / 2;
+#endif
+				// cue at the 150th simstep
+#ifdef TRAIN150
+				cue_time = 3 * maxStep / 4;
+#endif
 				// Cue sensor is quiet until matStep/2:
 				if (SimulationStep < maxStep / 2)
 					sensor_val.push_back(0.0);
 				else
 					sensor_val.push_back(1.0);
+#endif // STAND
+
 				// get binary touch vals:
 				for (int j = 0; j < num_input; j++)
 				{
@@ -1709,6 +1920,7 @@ void RagdollDemo::clientMoveAndDisplay()
 				}
 #endif
 				// Increase the simulation time step counter:
+				cout << "Sim. step = " << SimulationStep << endl;
 				SimulationStep++;
 
 #ifndef TRAIN //if DEMO!!!

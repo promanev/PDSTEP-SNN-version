@@ -14,10 +14,10 @@ GLDebugDrawer	gDebugDrawer;
 
 int main(int argc,char* argv[])
 {
-
+	int cue_time;
 	RagdollDemo demoApp;
 	if (argc > 1)
-		demoApp.initParams(argv[1]);
+		cue_time = demoApp.initParams(argv[1]);
 
     demoApp.initPhysics();
 #ifndef TRAIN
@@ -27,7 +27,7 @@ int main(int argc,char* argv[])
 	float ms = 1.0f / 60.0f;
 	while(1)
 	{
-		demoApp.stepPhysics(ms);
+		demoApp.stepPhysics(cue_time);
 	}	
 	int retval = 0;
 #endif //TRAIN

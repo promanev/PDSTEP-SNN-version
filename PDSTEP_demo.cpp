@@ -51,9 +51,9 @@ class RagDoll
 	double mass_UA = -0.896 + 0.0252*avBM + 0.0051*avBH; // upper arm separately
 	double mass_FA = -0.731 + 0.0047*avBM + 0.0084*avBH;  // forearm separately
 	double mass_arm = -1.627 + 0.0299*avBM + 0.0135*avBH; // UA+FA
-	double mass_hand = -0.325 - 0.0016*avBM + 0.0051*avBH; 
+	double mass_hand = -0.325 - 0.0016*avBM + 0.0051*avBH;
 
-//	// HEIGHTS:
+	//	// HEIGHTS:
 	double height_head = 1.95 + 0.0535*avBM + 0.105*avBH;
 	double height_torso = -32.11 - 0.095*avBM + 0.462*avBH; // upper + middle torso
 	double height_pelvis = 26.4 + 0.0473*avBM - 0.0311*avBH;
@@ -70,7 +70,7 @@ class RagDoll
 	double avBH = 169.0;
 	double avBM = 75.4;
 
-//	//MASSES:
+	//	//MASSES:
 	double mass_head = -2.95 + 0.0359*avBM + 0.0322*avBH;
 	double mass_torso = 24.05 + 0.3255*avBM - 0.1424*avBH; // upper + middle torso
 	double mass_pelvis = 1.1 + 0.104*avBM - 0.0027*avBH;
@@ -99,23 +99,23 @@ class RagDoll
 
 	// for the case of torso
 #ifdef TORSO
-		enum
-		{
-			BODYPART_ABDOMEN = 0, //1
-			BODYPART_PELVIS, //2
-			BODYPART_LEFT_LEG, //3
-			BODYPART_RIGHT_LEG, //4
-			BODYPART_LEFT_FOOT, //5
-			BODYPART_RIGHT_FOOT, //6
-			BODYPART_PLATFORM, //7
+	enum
+	{
+		BODYPART_ABDOMEN = 0, //1
+		BODYPART_PELVIS, //2
+		BODYPART_LEFT_LEG, //3
+		BODYPART_RIGHT_LEG, //4
+		BODYPART_LEFT_FOOT, //5
+		BODYPART_RIGHT_FOOT, //6
+		BODYPART_PLATFORM, //7
 
-			BODYPART_COUNT
-		};
+		BODYPART_COUNT
+	};
 #else
 #ifndef KNEES
 	enum
 	{
-		
+
 		BODYPART_PELVIS = 0, //1 
 		BODYPART_LEFT_LEG, //2
 		BODYPART_RIGHT_LEG, //3
@@ -144,22 +144,22 @@ class RagDoll
 
 	// in the case of torso - one more joint
 #ifdef TORSO
-		enum
-		{
-			JOINT_LEFT_HIP=0, //1
-			JOINT_RIGHT_HIP, //2
-			JOINT_LEFT_ANKLE, //3
-			JOINT_RIGHT_ANKLE, //4
-			JOINT_BODY_PELVIS, //5
+	enum
+	{
+		JOINT_LEFT_HIP = 0, //1
+		JOINT_RIGHT_HIP, //2
+		JOINT_LEFT_ANKLE, //3
+		JOINT_RIGHT_ANKLE, //4
+		JOINT_BODY_PELVIS, //5
 
-			JOINT_COUNT
-		};
+		JOINT_COUNT
+	};
 
 #else
 #ifndef KNEES 
 	enum
 	{
-		
+
 		JOINT_LEFT_HIP = 0, //1	
 		JOINT_RIGHT_HIP, //2
 		JOINT_LEFT_ANKLE, //3
@@ -203,23 +203,23 @@ class RagDoll
 	btCollisionShape* m_shapes[BODYPART_COUNT];
 	btRigidBody* m_bodies[BODYPART_COUNT];
 	// btTypedConstraint* m_joints[JOINT_COUNT]; // replaced by line below
-	btGeneric6DofConstraint* m_joints[JOINT_COUNT];
+	//btGeneric6DofConstraint* m_joints[JOINT_COUNT];
 	btJointFeedback fg;
 	// END USED TO BE PRIVATE
 
 	int * m_ids;
 
-	btRigidBody* localCreateRigidBody (btScalar mass, const btTransform& startTransform, btCollisionShape* shape)
+	btRigidBody* localCreateRigidBody(btScalar mass, const btTransform& startTransform, btCollisionShape* shape)
 	{
 		bool isDynamic = (mass != 0.f);
 
-		btVector3 localInertia(0,0,0);
+		btVector3 localInertia(0, 0, 0);
 		if (isDynamic)
-			shape->calculateLocalInertia(mass,localInertia);
+			shape->calculateLocalInertia(mass, localInertia);
 
 		btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-		
-		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass,myMotionState,shape,localInertia);
+
+		btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, myMotionState, shape, localInertia);
 		btRigidBody* body = new btRigidBody(rbInfo);
 
 		m_ownerWorld->addRigidBody(body);
@@ -228,6 +228,7 @@ class RagDoll
 	}
 
 public:
+	btGeneric6DofConstraint* m_joints[JOINT_COUNT];
 	//new feet vals:
 	double footLen = length_foot / 60;
 #ifdef OLD_FEET //preserve old code
@@ -238,7 +239,7 @@ public:
 	double footHeight = footLen * 0.375;
 #endif
 
-	RagDoll (btDynamicsWorld* ownerWorld, const btVector3& positionOffset, int* IDs)
+	RagDoll(btDynamicsWorld* ownerWorld, const btVector3& positionOffset, int* IDs)
 		: m_ownerWorld(ownerWorld), m_ids(IDs)
 	{
 		//CREATE BOXES:
@@ -253,22 +254,22 @@ public:
 
 		//all heights are scaled down by 30, to be comparable with the previous robot. Also units can be thought of as feet
 		// since 1 foot = 30.4878 cm. Values are parsed divided by 60 because functions take in half-measures. 
-		CreateBox(BODYPART_ABDOMEN, 0., 0.3+length_foot/60+height_leg/30+height_pelvis/60+height_torso/60, 0., height_pelvis/60, height_pelvis/60, height_torso/60, mass_torso);
-		CreateBox(BODYPART_PELVIS, 0., 0.3+length_foot/60+height_leg/30, 0., height_pelvis/60, height_pelvis/60, height_pelvis/60, mass_pelvis);
-		CreateBox(BODYPART_LEFT_FOOT, height_pelvis/60, 0.3+length_foot/120, 0., length_foot/ 60, length_foot/90, length_foot/120, mass_foot);
-		CreateBox(BODYPART_RIGHT_FOOT, -height_pelvis/60, 0.3+length_foot/120, 0., length_foot/60, length_foot/90, length_foot/120, mass_foot);
+		CreateBox(BODYPART_ABDOMEN, 0., 0.3 + length_foot / 60 + height_leg / 30 + height_pelvis / 60 + height_torso / 60, 0., height_pelvis / 60, height_pelvis / 60, height_torso / 60, mass_torso);
+		CreateBox(BODYPART_PELVIS, 0., 0.3 + length_foot / 60 + height_leg / 30, 0., height_pelvis / 60, height_pelvis / 60, height_pelvis / 60, mass_pelvis);
+		CreateBox(BODYPART_LEFT_FOOT, height_pelvis / 60, 0.3 + length_foot / 120, 0., length_foot / 60, length_foot / 90, length_foot / 120, mass_foot);
+		CreateBox(BODYPART_RIGHT_FOOT, -height_pelvis / 60, 0.3 + length_foot / 120, 0., length_foot / 60, length_foot / 90, length_foot / 120, mass_foot);
 #else	
 #ifndef KNEES
 		CreateBox(BODYPART_PLATFORM, 0, 0.15, 0, 6., 4., 0.15, 200.);
-		CreateBox(BODYPART_PELVIS, 0., 0.3+length_foot/60+height_leg/30, 0., height_pelvis/60, height_pelvis/60, height_pelvis/60, mass_pelvis);
-		CreateBox(BODYPART_LEFT_FOOT, height_pelvis/60, 0.3+length_foot/120, 0., length_foot/60, length_foot/90, length_foot/120, mass_foot);
-		CreateBox(BODYPART_RIGHT_FOOT, -height_pelvis/60, 0.3+length_foot/120, 0., length_foot/60, length_foot/90, length_foot/120, mass_foot);
+		CreateBox(BODYPART_PELVIS, 0., 0.3 + length_foot / 60 + height_leg / 30, 0., height_pelvis / 60, height_pelvis / 60, height_pelvis / 60, mass_pelvis);
+		CreateBox(BODYPART_LEFT_FOOT, height_pelvis / 60, 0.3 + length_foot / 120, 0., length_foot / 60, length_foot / 90, length_foot / 120, mass_foot);
+		CreateBox(BODYPART_RIGHT_FOOT, -height_pelvis / 60, 0.3 + length_foot / 120, 0., length_foot / 60, length_foot / 90, length_foot / 120, mass_foot);
 #else
 		CreateBox(BODYPART_PLATFORM, 0, 0.15, 0, 6., 4., 0.15, 200.);
-		CreateBox(BODYPART_PELVIS, 0., 0.3 + footHeight*2 + height_leg / 30, 0., height_pelvis / 60, height_pelvis / 60, height_pelvis / 60, mass_pelvis);
+		CreateBox(BODYPART_PELVIS, 0., 0.3 + footHeight * 2 + height_leg / 30, 0., height_pelvis / 60, height_pelvis / 60, height_pelvis / 60, mass_pelvis);
 		//CreateBox(BODYPART_LEFT_FOOT, height_pelvis / 60, 0.3 + length_foot / 120, 0., length_foot / 60, length_foot / 90, length_foot / 120, mass_foot);
 		//CreateBox(BODYPART_RIGHT_FOOT, -height_pelvis / 60, 0.3 + length_foot / 120, 0., length_foot / 60, length_foot / 90, length_foot / 120, mass_foot);
-		
+
 		//new feet proportions (based on my foot): length = 1; width, height = 0.375;
 		CreateBox(BODYPART_LEFT_FOOT, height_pelvis / 60, 0.3 + footHeight, 0., footLen, footWid, footHeight, mass_foot);
 		CreateBox(BODYPART_RIGHT_FOOT, -height_pelvis / 60, 0.3 + footHeight, 0., footLen, footWid, footHeight, mass_foot);
@@ -278,10 +279,10 @@ public:
 
 		//CREATE LEGS:
 #ifndef KNEES
-		CreateCylinder(BODYPART_LEFT_LEG, Y_ORIENT, height_pelvis/60, 0.3+length_foot/60+height_leg/60, 0., height_leg/60, 0.15, 1., mass_leg);
-		CreateCylinder(BODYPART_RIGHT_LEG, Y_ORIENT, -height_pelvis/60, 0.3+length_foot/60+height_leg/60, 0., height_leg/60, 0.15, 1., mass_leg);
+		CreateCylinder(BODYPART_LEFT_LEG, Y_ORIENT, height_pelvis / 60, 0.3 + length_foot / 60 + height_leg / 60, 0., height_leg / 60, 0.15, 1., mass_leg);
+		CreateCylinder(BODYPART_RIGHT_LEG, Y_ORIENT, -height_pelvis / 60, 0.3 + length_foot / 60 + height_leg / 60, 0., height_leg / 60, 0.15, 1., mass_leg);
 #else
-		CreateCylinder(BODYPART_LEFT_THIGH, Y_ORIENT, height_pelvis / 60, 0.3 + footHeight * 2 + height_shank / 30 + height_thigh/60, 0., height_thigh / 60, 0.15, 1., mass_thigh);
+		CreateCylinder(BODYPART_LEFT_THIGH, Y_ORIENT, height_pelvis / 60, 0.3 + footHeight * 2 + height_shank / 30 + height_thigh / 60, 0., height_thigh / 60, 0.15, 1., mass_thigh);
 		CreateCylinder(BODYPART_RIGHT_THIGH, Y_ORIENT, -height_pelvis / 60, 0.3 + footHeight * 2 + height_shank / 30 + height_thigh / 60, 0., height_thigh / 60, 0.15, 1., mass_thigh);
 		CreateCylinder(BODYPART_LEFT_SHANK, Y_ORIENT, height_pelvis / 60, 0.3 + footHeight * 2 + height_shank / 60, 0., height_shank / 60, 0.15, 1., mass_shank);
 		CreateCylinder(BODYPART_RIGHT_SHANK, Y_ORIENT, -height_pelvis / 60, 0.3 + footHeight * 2 + height_shank / 60, 0., height_shank / 60, 0.15, 1., mass_shank);
@@ -292,22 +293,22 @@ public:
 #ifdef TORSO
 
 		//Flipped the boundary values on 25.02.2014, used to be 2.5 and 0.5 for AL, ML is the same - 0.67 and 0.67. Flipped again on 3.03.2014, researching the bug where the limits on the targetAngle produced a "jumping" bug. 
-		Create6DOF(JOINT_LEFT_HIP, BODYPART_PELVIS, BODYPART_LEFT_LEG, btVector3(height_pelvis/60, 0., 0.), btVector3(0., height_leg/60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L,HIP_AP_H,HIP_ML_L,HIP_ML_H);
-		Create6DOF(JOINT_RIGHT_HIP, BODYPART_PELVIS, BODYPART_RIGHT_LEG, btVector3(-height_pelvis/60, 0., 0.), btVector3(0., height_leg/60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
+		Create6DOF(JOINT_LEFT_HIP, BODYPART_PELVIS, BODYPART_LEFT_LEG, btVector3(height_pelvis / 60, 0., 0.), btVector3(0., height_leg / 60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
+		Create6DOF(JOINT_RIGHT_HIP, BODYPART_PELVIS, BODYPART_RIGHT_LEG, btVector3(-height_pelvis / 60, 0., 0.), btVector3(0., height_leg / 60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
 		//Flipped the boundary values on 25.02.2014, used to be 1.3 and 0.3 for AL. Flipped again on 3.03.2014, researching the bug where the limits on the targetAngle produced a "jumping" bug.  
-		Create6DOF(JOINT_LEFT_ANKLE, BODYPART_LEFT_LEG, BODYPART_LEFT_FOOT, btVector3(0.,-height_leg/60, 0.), btVector3(0.,length_foot/120, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
+		Create6DOF(JOINT_LEFT_ANKLE, BODYPART_LEFT_LEG, BODYPART_LEFT_FOOT, btVector3(0., -height_leg / 60, 0.), btVector3(0., length_foot / 120, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
 		//28 degrees (0.62*(pi/4=45degrees)) for ML movement in the ankles 
-		Create6DOF(JOINT_RIGHT_ANKLE, BODYPART_RIGHT_LEG, BODYPART_RIGHT_FOOT, btVector3(0.,-height_leg/60, 0.), btVector3(0.,length_foot/120, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
-		Create6DOF(JOINT_BODY_PELVIS, BODYPART_ABDOMEN, BODYPART_PELVIS, btVector3(0., -height_torso/60, height_pelvis/120), btVector3(0., height_pelvis/60, height_pelvis/120), M_PI_2, 0, M_PI_2, TP_AP_L, TP_AP_H, TP_ML_L, TP_ML_H);
+		Create6DOF(JOINT_RIGHT_ANKLE, BODYPART_RIGHT_LEG, BODYPART_RIGHT_FOOT, btVector3(0., -height_leg / 60, 0.), btVector3(0., length_foot / 120, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
+		Create6DOF(JOINT_BODY_PELVIS, BODYPART_ABDOMEN, BODYPART_PELVIS, btVector3(0., -height_torso / 60, height_pelvis / 120), btVector3(0., height_pelvis / 60, height_pelvis / 120), M_PI_2, 0, M_PI_2, TP_AP_L, TP_AP_H, TP_ML_L, TP_ML_H);
 #else
 #ifndef KNEES
 		//Flipped the boundary values on 25.02.2014, used to be 2.5 and 0.5 for AL, ML is the same - 0.67 and 0.67. Flipped again on 3.03.2014, researching the bug where the limits on the targetAngle produced a "jumping" bug. 
-		Create6DOF(JOINT_LEFT_HIP, BODYPART_PELVIS, BODYPART_LEFT_LEG, btVector3(height_pelvis/60, 0., 0.), btVector3(0., height_leg/60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
-		Create6DOF(JOINT_RIGHT_HIP, BODYPART_PELVIS, BODYPART_RIGHT_LEG, btVector3(-height_pelvis/60, 0., 0.), btVector3(0., height_leg/60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
+		Create6DOF(JOINT_LEFT_HIP, BODYPART_PELVIS, BODYPART_LEFT_LEG, btVector3(height_pelvis / 60, 0., 0.), btVector3(0., height_leg / 60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
+		Create6DOF(JOINT_RIGHT_HIP, BODYPART_PELVIS, BODYPART_RIGHT_LEG, btVector3(-height_pelvis / 60, 0., 0.), btVector3(0., height_leg / 60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
 		//Flipped the boundary values on 25.02.2014, used to be 1.3 and 0.3 for AL. Flipped again on 3.03.2014, researching the bug where the limits on the targetAngle produced a "jumping" bug.  
-		Create6DOF(JOINT_LEFT_ANKLE, BODYPART_LEFT_LEG, BODYPART_LEFT_FOOT, btVector3(0., -height_leg/60, 0.), btVector3(0., length_foot/120, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
+		Create6DOF(JOINT_LEFT_ANKLE, BODYPART_LEFT_LEG, BODYPART_LEFT_FOOT, btVector3(0., -height_leg / 60, 0.), btVector3(0., length_foot / 120, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
 		//28 degrees (0.62*(pi/4=45degrees)) for ML movement in the ankles 
-		Create6DOF(JOINT_RIGHT_ANKLE, BODYPART_RIGHT_LEG, BODYPART_RIGHT_FOOT, btVector3(0., -height_leg/60, 0.), btVector3(0., length_foot/120, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
+		Create6DOF(JOINT_RIGHT_ANKLE, BODYPART_RIGHT_LEG, BODYPART_RIGHT_FOOT, btVector3(0., -height_leg / 60, 0.), btVector3(0., length_foot / 120, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
 #else // if KNEES:
 		Create6DOF(JOINT_LEFT_HIP, BODYPART_PELVIS, BODYPART_LEFT_THIGH, btVector3(height_pelvis / 60, 0., 0.), btVector3(0., height_thigh / 60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
 		Create6DOF(JOINT_RIGHT_HIP, BODYPART_PELVIS, BODYPART_RIGHT_THIGH, btVector3(-height_pelvis / 60, 0., 0.), btVector3(0., height_thigh / 60, 0.), M_PI_2, 0, M_PI_2, HIP_AP_L, HIP_AP_H, HIP_ML_L, HIP_ML_H);
@@ -316,32 +317,32 @@ public:
 		// new position of ankle joints:
 		Create6DOF(JOINT_LEFT_ANKLE, BODYPART_LEFT_SHANK, BODYPART_LEFT_FOOT, btVector3(0., -height_shank / 60, 0.), btVector3(0., footHeight, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
 		Create6DOF(JOINT_RIGHT_ANKLE, BODYPART_RIGHT_SHANK, BODYPART_RIGHT_FOOT, btVector3(0., -height_shank / 60, 0.), btVector3(0., footHeight, 0.), M_PI_2, 0, M_PI_2, ANKL_AP_L, ANKL_AP_H, ANKL_ML_L, ANKL_ML_H);
-		
+
 #endif
 #endif
 		//FRICTION CTRL:
-		m_bodies[BODYPART_LEFT_FOOT]->setFriction(7); 
+		m_bodies[BODYPART_LEFT_FOOT]->setFriction(7);
 		m_bodies[BODYPART_RIGHT_FOOT]->setFriction(7);
 		m_bodies[BODYPART_PLATFORM]->setFriction(7);
 		return;
 	}
 
 	// DESTRUCTOR:
-	virtual	~RagDoll ()
+	virtual	~RagDoll()
 	{
 		int i;
 
 		// Remove all constraints
-		for ( i = 0; i < JOINT_COUNT; ++i)
+		for (i = 0; i < JOINT_COUNT; ++i)
 		{
 			m_ownerWorld->removeConstraint(m_joints[i]);
 			delete m_joints[i]; m_joints[i] = 0;
 		}
 
 		// Remove all bodies and shapes
-		for ( i = 0; i < BODYPART_COUNT; ++i)
+		for (i = 0; i < BODYPART_COUNT; ++i)
 		{
-			m_ownerWorld->removeRigidBody(m_bodies[i]);			
+			m_ownerWorld->removeRigidBody(m_bodies[i]);
 			delete m_bodies[i]->getMotionState();
 			delete m_bodies[i]; m_bodies[i] = 0;
 			delete m_shapes[i]; m_shapes[i] = 0;
@@ -428,7 +429,7 @@ public:
 	}
 
 	// CREATE 6-DoF JOINT: 
-	void Create6DOF(int jointIndex, int index1, int index2, const btVector3& origin1,const btVector3& origin2, btScalar euler1, btScalar euler2, btScalar euler3, btScalar APLow, btScalar APHigh, btScalar MLLow, btScalar MLHigh)
+	void Create6DOF(int jointIndex, int index1, int index2, const btVector3& origin1, const btVector3& origin2, btScalar euler1, btScalar euler2, btScalar euler3, btScalar APLow, btScalar APHigh, btScalar MLLow, btScalar MLHigh)
 	{
 		btGeneric6DofConstraint * joint;
 		btTransform localA, localB;
@@ -492,10 +493,10 @@ public:
 		saveFile.open(filename, ios_base::app);
 		for (unsigned i = 0; i < data.size(); i++)
 		{
-			saveFile << setprecision(0)<<counter<< " " << setprecision(6) <<data.at(i)<< endl;
+			saveFile << setprecision(0) << counter << " " << setprecision(6) << data.at(i) << endl;
 			counter++;
 		}
-		
+
 		saveFile.close();
 	}
 
@@ -524,7 +525,7 @@ public:
 
 		saveFile.close();
 	}
-	
+
 	void save_2DDbl(vector<vector<double>> data, string filename)
 	{
 		ofstream saveFile;
@@ -633,7 +634,7 @@ public:
 		btRigidBody * pointer = m_bodies[bodyIndex];
 		btVector3 position = pointer->getCenterOfMassPosition();
 		return position;
-		
+
 	}
 	// Get COM position of the whole body
 	btVector3 wholeBodyCOM()
@@ -644,12 +645,12 @@ public:
 		btScalar COMcoordY = 0;
 		btScalar COMcoordZ = 0;
 		//last "body part" is the platform, which should be discounted
-		for (int i = 0; i < BODYPART_COUNT-1; i++)
+		for (int i = 0; i < BODYPART_COUNT - 1; i++)
 		{
 			btRigidBody * pointer = m_bodies[i];
 			btVector3 bodySegCOM = pointer->getCenterOfMassPosition();
 
-			thisMass =  1 / (pointer->getInvMass());
+			thisMass = 1 / (pointer->getInvMass());
 			sumMass += 1 / (pointer->getInvMass());
 			COMcoordX += bodySegCOM.x() * thisMass;
 			COMcoordY += bodySegCOM.y() * thisMass;
@@ -688,7 +689,7 @@ public:
 		return targPos;
 	}
 
-	double onlineFitness(int SimulationStep, int maxStep)
+	double onlineFitness(int SimulationStep, int maxStep, int cue_time)
 	{
 		// initial body segment positions:
 		// PELVIS:
@@ -716,7 +717,7 @@ public:
 		double initLFootY = 0.3 + footHeight;
 		double initLFootZ = 0.0;
 		// RIGHT FOOT:
-		double initRFootX = - height_pelvis / 60;
+		double initRFootX = -height_pelvis / 60;
 		double initRFootY = 0.3 + footHeight;
 		double initRFootZ = 0.0;
 
@@ -737,72 +738,41 @@ public:
 		btVector3 rfootPos = p_rfoot->getCenterOfMassPosition();
 
 		double result;
-		double max_disp=10; // arbitrary chosen maximum displacement (should test this or find other way to justify this choice)
+		double max_disp = 10; // arbitrary chosen maximum displacement (should test this or find other way to justify this choice)
 							// robot height is 3.2, so this is three heights
-		//cout << "Simstep = " << SimulationStep << endl;
-
-		// time when the movement cue is presented:
-		int cue_time;
-
-// if it's just standing experiment -> make a sure there is never a switch between fitness fcns:
-#ifdef STAND
-		cue_time = maxStep+1;
-#endif
-
-// cue at the 50th simstep
-#ifdef TRAIN50
-		cue_time = maxStep / 4;
-#endif
-// cue at the 100th simstep
-#ifdef TRAIN100
-		cue_time = maxStep / 2;
-#endif
-// cue at the 150th simstep
-#ifdef TRAIN150
-		cue_time = 3 * maxStep / 4;
-#endif
-
 		if (SimulationStep < cue_time)
 		{
 			//cout << "Since SimStep " << SimulationStep << " < maxStep/2 " << maxStep / 2 << ", I am keeping the initial pelvis height" << endl;
 			// Get pelvis part of fitness:
-			result = 1/(1+fabs(initPelvisX - pelPos.x()) ) * 1/(1+fabs(initPelvisY - pelPos.y()) ) * 1/(1+fabs(initPelvisZ - pelPos.z()) ); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			result = 1 / (1 + fabs(initPelvisX - pelPos.x())) * 1 / (1 + fabs(initPelvisY - pelPos.y())) * 1 / (1 + fabs(initPelvisZ - pelPos.z())); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 			//cout << "Pelvis. Fitness = " << result << endl;
-			
 			// LTHIGH:
-			result = result * 1/(1+fabs(initLThighX - lthighPos.x()) ) * 1/(1+fabs(initLThighY - lthighPos.y()) ) * 1/(1+fabs(initLThighZ - lthighPos.z()) ); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			result = result * 1 / (1 + fabs(initLThighX - lthighPos.x())) * 1 / (1 + fabs(initLThighY - lthighPos.y())) * 1 / (1 + fabs(initLThighZ - lthighPos.z())); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 			//cout << "LThigh. Fitness = " << result << endl;
-			
-			// RTHIGH:
-			result = result * 1/(1+fabs(initRThighX - rthighPos.x()) ) * 1/(1+fabs(initRThighY - rthighPos.y()) ) * 1/(1+fabs(initRThighZ - rthighPos.z()) ); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			 // RTHIGH:
+			result = result * 1 / (1 + fabs(initRThighX - rthighPos.x())) * 1 / (1 + fabs(initRThighY - rthighPos.y())) * 1 / (1 + fabs(initRThighZ - rthighPos.z())); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 			//cout << "RThigh. Fitness = " << result << endl;
-			
 			// LSHANK:
-			result = result * 1/(1+fabs(initLShankX - lshankPos.x()) ) * 1/(1+fabs(initLShankY - lshankPos.y()) ) * 1/(1+fabs(initLShankZ - lshankPos.z()) ); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			result = result * 1 / (1 + fabs(initLShankX - lshankPos.x())) * 1 / (1 + fabs(initLShankY - lshankPos.y())) * 1 / (1 + fabs(initLShankZ - lshankPos.z())); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 			//cout << "X-axis = exp(-" << initLShankX << " - " << fabs(lshankPos.x()) << " = " << 1 / (1 + fabs(initLShankX - lshankPos.x())) << endl;
 			//cout << "Y-axis = exp(-" << initLShankY << " - " << fabs(lshankPos.y()) << " = " << 1 / (1 + fabs(initLShankY - lshankPos.y())) << endl;
 			//cout << "Z-axis = exp(-" << initLShankZ << " - " << fabs(lshankPos.z()) << " = " << 1 / (1 + fabs(initLShankZ - lshankPos.z())) << endl;
-
 			//cout << "LShank. Fitness = " << 1 / (1 + fabs(initLShankX - lshankPos.x())) << " * " << 1 / (1 + fabs(initLShankY - lshankPos.y())) << " * " << 1 / (1 + fabs(initLShankZ - lshankPos.z())) << " = "<< result << endl;
-			
 			// RSHANK:
-			result = result * 1/(1+fabs(initRShankX - fabs(rshankPos.x()) )) * 1/(1+fabs(initRShankY - fabs(rshankPos.y()) )) * 1/(1+fabs(initRShankZ - fabs(rshankPos.z()) )); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			result = result * 1 / (1 + fabs(initRShankX - fabs(rshankPos.x()))) * 1 / (1 + fabs(initRShankY - fabs(rshankPos.y()))) * 1 / (1 + fabs(initRShankZ - fabs(rshankPos.z()))); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 			//cout << "RShank. Fitness = " << result << endl;
-			
 			// LFOOT:
-			result = result * 1/(1+fabs(initLFootX - fabs(lfootPos.x()) )) * 1/(1+fabs(initLFootY - fabs(lfootPos.y()) )) * 1/(1+fabs(initLFootZ - fabs(lfootPos.z()) )); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			result = result * 1 / (1 + fabs(initLFootX - fabs(lfootPos.x()))) * 1 / (1 + fabs(initLFootY - fabs(lfootPos.y()))) * 1 / (1 + fabs(initLFootZ - fabs(lfootPos.z()))); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 			//cout << "LFoot. Fitness = " << result << endl;
-			
 			// RFOOT:
-			result = result * 1/(1+fabs(initRFootX - fabs(rfootPos.x()) )) * 1/(1+fabs(initRFootY - fabs(rfootPos.y()) )) * 1/(1+fabs(initRFootZ - fabs(rfootPos.z()) )); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			result = result * 1 / (1 + fabs(initRFootX - fabs(rfootPos.x()))) * 1 / (1 + fabs(initRFootY - fabs(rfootPos.y()))) * 1 / (1 + fabs(initRFootZ - fabs(rfootPos.z()))); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
 			//cout << "RFoot. Fitness = " << result << endl;
 			//cout << "Curr. height = " << pelPos.y() << ", fitness = " << pelvHeightMember << endl;
-			
 		}
 		else
 		{
-			//cout << "Since SimStep " << SimulationStep << " > maxStep/2 " << maxStep / 2 << ", I am maximizing Z-displacement" << endl;
-			result = exp(-(max_disp - fabs(pelPos.z()))); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			result = exp(-(max_disp - fabs(rfootPos.z()))); //cout << "pelvHeightMember = " << pelvHeightMember << endl;
+			//cout << "Since SimStep " << SimulationStep << " > cue_time " << cue_time << ", I am maximizing Z-displacement, result = " << result << endl;
 			//cout << "Curr. height = " << pelPos.z() << ", fitness = " << pelvHeightMember << endl;
 		}
 
@@ -929,29 +899,50 @@ void load_data(const string& file_name, vector<vector<float > >& data) {
 }
 
 // hardcode the file name here:
-RagdollDemo::RagdollDemo() :m_inputFileName("weights.txt"), m_firingsFileName("gate_firings.txt")
+RagdollDemo::RagdollDemo() :m_inputFileName("weights.txt")
 {}
-//RagdollDemo::RagdollDemo() : m_firingsFileName("firings.txt")
-//{}
-
 // execute reading:
-void RagdollDemo::initParams(const std::string& inputFileName)
+//void RagdollDemo::initParams(const std::string& inputFileName)
+//{
+//	if (!inputFileName.empty())
+//		m_inputFileName = inputFileName;
+//	string cue_time = m_inputFileName;
+//	cout << "Got cue_time = " << cue_time << endl;
+//}
+
+int RagdollDemo::initParams(const std::string& inputCueTime)
 {
-	if (!inputFileName.empty())
-		m_inputFileName = inputFileName;
+	if (!inputCueTime.empty())
+		m_inputFileName = inputCueTime;
+	stringstream convert(m_inputFileName);
+	int cue_time;
+	convert >> cue_time;
+	//cue_time = m_inputFileName;
+	cout << "Got cue_time = " << cue_time << endl;
+	return cue_time;
 }
 
+//void RagdollDemo::initParams(int& inputFileName)
+//{
+//	int cue_time;
+//	//if (inputFileName.size()>0)
+//	//{
+//	cue_time = inputFileName;
+//	cout << "Got cue_time = " << cue_time << endl;
+//	//}
+//}
+
 #ifdef EXPORT
-tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<vector<float > > gate_firings, vector<double > sensor_val, int num_output, int neur_sim_step, int simStep)
+tuple < vector<vector<float > >, vector<vector<int > > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<double > sensor_val, int num_output, int neur_sim_step, int simStep)
 #else
-vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<vector<float > > gate_firings, vector<double > sensor_val, int num_output, int neur_sim_step)
+vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<double > sensor_val, int num_output, int neur_sim_step)
 #endif
 {
 	// some housekeeping variables:
 	// number of time steps to integrate numerically:
 	float timeStep = 2.0f;
 	// get total number of neurons:
-	int totalNeuronNum = a.size();
+	int totalNeuronNum = (int)a.size();
 	// vector to keep track of inputs to each neuron:
 	vector<float > I(a.size()); // has to be generated each simulation step
 	int sens_gain = 30;
@@ -978,6 +969,8 @@ vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b,
 	int height_sens_neuron;
 #endif //end HS
 
+	// DEBUG:
+	// cout << "Sim.step = " << SimulationStep << ". Cue sensor val = " << sensor_val[0] << ", left foot touch sensor = " << sensor_val[1] << ", right = " << sensor_val[2] << endl;
 	// MAIN CYCLE:
 	for (int t = 0; t < neur_sim_step; t++)
 	{
@@ -1196,41 +1189,8 @@ void RagdollDemo::initPhysics()
 
 	//READ WEIGHTS:
 	// from input file into var called 'w': 
-	load_data(m_inputFileName, w);
-	// load firings:
-
-	load_data(m_firingsFileName, gate_firings);
-	// convert 1D vector of firings into a 2D binary matrix of spikes (neuron_number X max_t) with 1s for spikes:
-	vector<vector<float > > gate_firings_2D;
-	// fill the 2D vector with zeros:
-	for (int idx1 = 0; idx1 < N; idx1++)
-	{
-		gate_firings_2D.push_back(vector<float>());
-		for (int idx2 = 0; idx2 < maxStep * neur_sim_step; idx2++)
-		{
-			gate_firings_2D[idx1].push_back(0.0);
-		}
-	}
-	// now put ones:
-	int curr_neur_idx;
-	int curr_sim_time;
-	for (int idx1 = 0; idx1 < gate_firings[0].size(); idx1 = idx1 + 2)
-	{
-		curr_sim_time = gate_firings[0][idx1];
-		curr_neur_idx = gate_firings[0][idx1 + 1];
-		gate_firings_2D[curr_neur_idx][curr_sim_time] = 1.0;
-	}
-
-	//// DEBUG. Print out the resulting gate firings in 2D:
-	//for (int idx1 = 0; idx1 < N; idx1++)
-	//{
-	//	for (int idx2 = 0; idx2 < maxStep * neur_sim_step; idx2++)
-	//	{
-	//		cout << gate_firings_2D[idx1][idx2] << " ";
-	//	}
-	//	cout << endl;
-	//}
-
+	//load_data(m_inputFileName, w);
+	load_data("weights.txt", w);
 //END ADDED
 	// Setup the basic world
 	setTexturing(true);
@@ -1291,8 +1251,9 @@ void RagdollDemo::spawnRagdoll(const btVector3& startOffset)
 
 
 //Step through simulation without invoking graphics interface:
-void RagdollDemo::stepPhysics(float ms)
+void RagdollDemo::stepPhysics(int cue_time)
 {
+	cout << "InitPhysics received cue_time = " << cue_time << endl;
 	// vector of target angle values:
 	vector<double > targ_angs(num_output);
 	//BULLET note: simple dynamics world doesn't handle fixed-time-stepping
@@ -1341,11 +1302,11 @@ void RagdollDemo::stepPhysics(float ms)
 				}
 				//update neronal states:
 #ifdef EXPORT
-				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, gate_firings_2D, sensor_val, num_output, neur_sim_step, SimulationStep);
+				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output, neur_sim_step, SimulationStep);
 				m_ragdolls[0]->save_2DInt(firings, "firings.txt");
 				firings.clear();
 #else // if no EXPORT:
-				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, gate_firings_2D, sensor_val, num_output, neur_sim_step);
+				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output, neur_sim_step);
 #endif // EXPORT
 				// convert spikes into motor commands by estimating the ratio of maximal firing rate:
 				// Chattering neuron has circa 15 spikes per 20 ms = 750 spikes per 1000 ms or 750 Hz (estimated using izhikevich matlab code with I=100)
@@ -1515,7 +1476,7 @@ void RagdollDemo::stepPhysics(float ms)
 				m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
 #endif // STAND
 				// update fitness: 
-				tempFitness += m_ragdolls[0]->onlineFitness(SimulationStep, maxStep);
+				tempFitness += m_ragdolls[0]->onlineFitness(SimulationStep, maxStep, cue_time);
 
 #ifdef JOINT
 				//store joint angles for exporting:
@@ -1529,21 +1490,21 @@ void RagdollDemo::stepPhysics(float ms)
 				//Get new sensor vals:
 				sensor_val.clear();
 #ifndef STAND
-				int cue_time;
-				// original stand then fall setup (cue at the 50% of the simulation)
-				// cue at the 50th simstep
-#ifdef TRAIN50
-				cue_time = maxStep / 4;
-#endif
-				// cue at the 100th simstep
-#ifdef TRAIN100
-				cue_time = maxStep / 2;
-#endif
-				// cue at the 150th simstep
-#ifdef TRAIN150
-				cue_time = 3 * maxStep / 4;
-#endif
-				// Cue sensor is quiet until matStep/2:
+//				int cue_time;
+//				// original stand then fall setup (cue at the 50% of the simulation)
+//				// cue at the 50th simstep
+//#ifdef TRAIN50
+//				cue_time = maxStep / 4;
+//#endif
+//				// cue at the 100th simstep
+//#ifdef TRAIN100
+//				cue_time = maxStep / 2;
+//#endif
+//				// cue at the 150th simstep
+//#ifdef TRAIN150
+//				cue_time = 3 * maxStep / 4;
+//#endif
+				// cue_time is fed from console in TRAIN app:
 				if (SimulationStep < cue_time)
 					sensor_val.push_back(0.0);
 				else
@@ -1703,11 +1664,11 @@ void RagdollDemo::clientMoveAndDisplay()
 				}
 				//update neronal states:
 #ifdef EXPORT
-				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, gate_firings_2D, sensor_val, num_output, neur_sim_step,SimulationStep);
+				tie(snn_state, firings) = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, num_output, neur_sim_step,SimulationStep);
 				m_ragdolls[0]->save_2DInt(firings, "firings.txt");
 				firings.clear();				
 #else // if no EXPORT:
-				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, gate_firings_2D, sensor_val, neur_sim_step, num_output);
+				snn_state = stepSNN(a, b, c, d, snn_state[0], snn_state[1], w, sensor_val, neur_sim_step, num_output);
 #endif // EXPORT
 				// convert spikes into motor commands by estimating the ratio of maximal firing rate:
 				// Chattering neuron has circa 15 spikes per 20 ms = 750 spikes per 1000 ms or 750 Hz (estimated using izhikevich matlab code with I=100)
@@ -1858,30 +1819,11 @@ void RagdollDemo::clientMoveAndDisplay()
 			    }
 #endif 
 
-#ifndef STAND
-				if (SimulationStep<maxStep / 2)
-					// Check if robot is still upright:
-					m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
-#else
-				m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
-#endif
-
-				//if check is passed, continue the simulation and fitness calculation:;
-				tempFitness += m_ragdolls[0]->onlineFitness(SimulationStep, maxStep);
-
-#ifdef JOINT
-				//store joint angles for exporting:
-				for (int i = 0; i < num_output; i++)
-				{
-					joint_val[i][SimulationStep] = m_ragdolls[0]->m_joints[i/2]->getRotationalLimitMotor(fabs(sin(i*M_PI / 2)) + 1)->m_currentPosition*180/M_PI;
-					//cout << "Joint[" << i + 1 << "] = " << joint_val[i][SimulationStep] << endl;
-				}
-				//DEBUG when touches are updated:
-#endif
-				//Get new sensor vals:
+				//Prepare sensor_vals for new values:
 				sensor_val.clear();
 
 #ifndef STAND
+// set the cue_time here (unlike stepPhysics that gets it from console)				
 				int cue_time;
 				// original stand then fall setup (cue at the 50% of the simulation)
 				// cue at the 50th simstep
@@ -1897,11 +1839,32 @@ void RagdollDemo::clientMoveAndDisplay()
 				cue_time = 3 * maxStep / 4;
 #endif
 				// Cue sensor is quiet until matStep/2:
-				if (SimulationStep < maxStep / 2)
+				if (SimulationStep < cue_time)
 					sensor_val.push_back(0.0);
 				else
 					sensor_val.push_back(1.0);
-#endif // STAND
+
+
+				if (SimulationStep<maxStep / 2)
+					// Check if robot is still upright:
+					m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
+#else
+				m_ragdolls[0]->isUpright(tempFitness, maxStep, SimulationStep);
+				int cue_time = maxStep + 1; // cue is never given if STAND experiment (no change in motor state)!
+#endif
+
+				//if check is passed, continue the simulation and fitness calculation:;
+				tempFitness += m_ragdolls[0]->onlineFitness(SimulationStep, maxStep, cue_time);
+
+#ifdef JOINT
+				//store joint angles for exporting:
+				for (int i = 0; i < num_output; i++)
+				{
+					joint_val[i][SimulationStep] = m_ragdolls[0]->m_joints[i/2]->getRotationalLimitMotor(fabs(sin(i*M_PI / 2)) + 1)->m_currentPosition*180/M_PI;
+					//cout << "Joint[" << i + 1 << "] = " << joint_val[i][SimulationStep] << endl;
+				}
+				//DEBUG when touches are updated:
+#endif
 
 				// get binary touch vals:
 				for (int j = 0; j < num_input; j++)

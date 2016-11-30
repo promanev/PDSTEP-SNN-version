@@ -125,10 +125,6 @@ public:
 	vector<vector<float > > w;
 	// name of the file with weights
 	string m_inputFileName; 
-	// name of the firings file for gating network:
-	string m_firingsFileName;
-	// file to store firings:
-	vector<vector<float > > gate_firings, gate_firings_2D;
 //============ SNN params ==============/
 // Network parameters:
 	int N = 24; // neuron count
@@ -168,14 +164,15 @@ public:
 	// Main SNN function:
 	//vector<vector<float > > RagdollDemo::stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<int > sensor_val, int num_output);
 #ifdef EXPORT
-	tuple < vector<vector<float > >, vector<vector<int > > > stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<vector<float > > gate_firings, vector<double > sensor_val, int num_output, int neur_sim_step, int simStep);
+	tuple < vector<vector<float > >, vector<vector<int > > > stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<double > sensor_val, int num_output, int neur_sim_step, int simStep);
 	vector<vector<int > > firings; // matrix that holds binary spike data
 #else // if no EXPORT:
-	vector<vector<float > > stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<vector<float > > gate_firings, vector<double > sensor_val, int num_output, int neur_sim_step);
+	vector<vector<float > > stepSNN(vector<float > a, vector<float > b, vector<float > c, vector<float > d, vector<float > v, vector<float > u, vector<vector<float > > w, vector<double > sensor_val, int num_output, int neur_sim_step);
 #endif // EXPORT
 
 	// function that reads wts from a file
-	void initParams(const std::string& inputFileName); 
+	//void initParams(const std::string& inputFileName); 
+	int initParams(const std::string& inputCueTime);
 	// if COM needs to be extracted:
 #ifdef COM
 	vector<btVector3 > COMpath; //rows x, y, z; columns - simulation steps
@@ -195,7 +192,7 @@ public:
 		exitPhysics();
 	}
 	void spawnRagdoll(const btVector3& startOffset);
-	virtual void stepPhysics(float ms);
+	virtual void stepPhysics(int cue_time);
 	virtual void clientMoveAndDisplay();
 	virtual void displayCallback();
 	virtual void keyboardCallback(unsigned char key, int x, int y);

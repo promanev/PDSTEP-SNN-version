@@ -1,3 +1,10 @@
+# This script is different from ga.py in how it organizes connection storage. 
+# This is done in hopes to speed up the work with large neuronal population.
+# Here, instead of assuming that every neuron is connected to every other neuron
+# in the population, first, a 2D connection mask is created [<index of efferent neuron>, <index of afferent neuron>]
+# Now, population member has the length of this 2D mask (= 100 if there are 100 pairs)
+# and what is optimizied here is binary value for connections within the mask.
+
 import numpy as np
 import math as m
 import os
@@ -109,42 +116,22 @@ def writeTextFile(fileName,data):
     fid.close()
 # end DEF
 
-def simSNN(pop_member, SNNparam, a, b, c, d, v, u, aux_input_vals, output):
+def simSNN(pop_member, adj_mask, SNNparam, a, b, c, d, v, u, aux_input_vals, output):
     # Function that creates an SNN and runs it for 1 sim. step
     # aux_inputs - spikes that came from another subnetwork
     # num_output - number of special neurons that communicate outside of the current subnetwork
     # 
     # 
     # Begin: 
-    input_gain = 30.0
-    aux_gain = 30.0
+    input_gain = 1.0
+    aux_gain = 1.0
     Ne = SNNparam.ne # number of excitatory hidden neurons
     Ni = SNNparam.ni # number of inhibitory hidden neurons
     N_hidden = Ne + Ni # total number of hidden neurons
     N_out = SNNparam.num_out # number of output neurons
     N_in = SNNparam.num_in # number of input neurons
     N_aux = len(aux_input_vals) # number of additional, auxilary to this SNN, inputs
-    
-    # convert pop_member into weight matrices:
-    # gate_hidden_mark = N_aux * N_hidden
-    # sensor_hidden_mark = gate_hidden_mark + N_in*N_hidden
-    # hidden_hidden_mark = sensor_hidden_mark + N_hidden*N_hidden
-    # hidden_motor_mark = hidden_hidden_mark + N_out * N_hidden
-    
-    # Wgh = pop2wts(pop_member[0:gate_hidden_mark], N_aux)
-    # Wsh = pop2wts(pop_member[gate_hidden_mark:sensor_hidden_mark], N_in)
-    # Whh = pop2wts(pop_member[sensor_hidden_mark:hidden_hidden_mark], N_hidden)
-    # Whm = pop2wts(pop_member[hidden_hidden_mark:hidden_motor_mark], N_out)
-    #
-    # in order to reduce complexity, I will only optimize hid-hid weights
-    hidden_hidden_mark = N_hidden*N_hidden
     # 
-    Whh = pop2wts(pop_member[0:hidden_hidden_mark], N_hidden)
-    # Whm = pop2wts(pop_member[hidden_hidden_mark:hidden_motor_mark], N_out)
-    # set the rest of the matrices to 1s:
-    Wgh = np.ones((N_hidden, N_aux))
-    Wsh = np.ones((N_hidden, N_in))
-    Whm = np.ones((N_out, N_hidden))
     #
     h = 2.0
     # create influence vector by feeding it sensor and gate data:
@@ -155,14 +142,12 @@ def simSNN(pop_member, SNNparam, a, b, c, d, v, u, aux_input_vals, output):
     for i in xrange(0, N_hidden):
         # auxilary:
         for j in xrange(0, N_aux):
-            if Wgh[i][j]>0:
-                if aux_input_vals[j]>0:
-                    I[i] += 1 * aux_gain
+            if aux_input_vals[j]>0:
+                I[i] += 1 * aux_gain
         # sensory:
         for j in xrange(0, N_in):
-            if Wsh[i][j]>0:
-                if output[j]>0:
-                    I[i] += 1 * input_gain           
+            if output[j]>0:
+                I[i] += 1 * input_gain           
     # end FOR
    
     # Now go through all of the hidden neurons and detect if any of them spiked:        
@@ -177,24 +162,36 @@ def simSNN(pop_member, SNNparam, a, b, c, d, v, u, aux_input_vals, output):
             # propagate influence of this spike by adjusting all of the I-s values that this neuron connects to  
             #    print "Fired idx =",idx
             #    print "Before I =",I
-            for idx2 in xrange(0, N_hidden):
-                if Whh[idx][idx2]>0:
+            # for idx2 in xrange(0, N_hidden): # Here, it's assumed that each neuron is connected to each other (including self)
+            # Here, a mean connection number (mcn) is used that is calculated 
+            # as <total possible connections> * <prob. of connection>. Therefore,
+            # indeces of adj_mask items pertaining to the neuron that just fired (idx):
+            adj_mask_id_begin = idx * SNNparam.mcn
+            adj_mask_id_end = adj_mask_id_begin + SNNparam.mcn - 1
+            # print idx,"-th neuron fired, it affects afferents recorded between adj_mask[", adj_mask_id_begin,"][1] and adj_mask[",adj_mask_id_end,"][1]:"
+            # print "Pop.member's binary values are:",pop_member[adj_mask_id_begin:adj_mask_id_end]
+            for idx2 in xrange(adj_mask_id_begin, adj_mask_id_end): 
+                if pop_member[idx2]>0:
+                    # new_idx = idx * SNNparam.mcn + idx2
+                    # afferent_id = adj_mask[new_idx][1]
+                    afferent_id = adj_mask[idx2][1]
+                    # print "Since pop_member[",idx2,"]=", pop_member[idx2], ">0, it affects neuron #", afferent_id
+                    # print "BEFORE I[", afferent_id,"]=",I[afferent_id]                    
                     if idx > int(0.8*N_hidden):
-                        I[idx2] = I[idx2] - 1.0
+                        I[afferent_id] = I[afferent_id] - 1.0
                     else:
-                        I[idx2] = I[idx2] + 1.0
+                        I[afferent_id] = I[afferent_id] + 1.0
                     # end IF
+                    # print "AFTER I[", afferent_id,"]=",I[afferent_id]   
                 # end IF  
             # end FOR
                         
             # similarly, adjust I_out:
             for idx2 in xrange(0, N_out):
-                if Whm[idx2][idx]>0:
-                    if idx > int(0.8*N_hidden):
-                        I_out[idx2] = I_out[idx2] - 1.0
-                    else:
-                        I_out[idx2] = I_out[idx2] + 1.0
-                    # end IF
+                if idx > int(0.8*N_hidden):
+                    I_out[idx2] = I_out[idx2] - 1.0
+                else:
+                    I_out[idx2] = I_out[idx2] + 1.0
                 # end IF  
             # end FOR                        
         
@@ -247,7 +244,7 @@ def simSNN(pop_member, SNNparam, a, b, c, d, v, u, aux_input_vals, output):
 
 # end SIMSNN
     
-def getFitness(pop_member, SNNparam, target_rates, max_t):
+def getFitness(pop_member, adj_mask, SNNparam, target_rates, max_t):
     # Function evaluates SNN performance and calculates fitness value.
 
     # 1. Run the network for max_t ticks and record its outputs:
@@ -291,7 +288,7 @@ def getFitness(pop_member, SNNparam, target_rates, max_t):
         if tick == 0:
             output = np.full((N_out,1),1)
         # end IF    
-        output, v, u = simSNN(pop_member, SNNparam, a, b, c, d, v, u, aux_input_vals, output)
+        output, v, u = simSNN(pop_member, adj_mask, SNNparam, a, b, c, d, v, u, aux_input_vals, output)
         for i in xrange(0, N_out):
             output_spikes[i] += output[i]
         # end FOR
@@ -310,7 +307,8 @@ def getFitness(pop_member, SNNparam, target_rates, max_t):
         # Calculate RMS:
         error += (target_rates[i] - firing_rates[i])**2
     # 4. Return fitness as 1 - RMS:
-    fitness = 1.0 / (1.0 + np.sqrt(error/N_out)) - 0.5
+    fitness = 1.0 / (1.0 + np.sqrt(error/N_out)) - 0.5 # min(fitness) is 0.5 (when no output neurons fire, error is max = 1.0), therefore fitness is translated by 0.5, now min = 0.0
+    # in case there are several pop.members with identical fitness == 0, replace by a small random # so that parent selection algorithm acts properly (its sorting doesn't know how to deal with multiple identical entries)
     if fitness == 0.0:
         fitness = rd.random() / 10000.0
         # print "Fitness was 0, replaced it with", fitness
@@ -318,6 +316,69 @@ def getFitness(pop_member, SNNparam, target_rates, max_t):
         #print "Fitness =", fitness, "because square root =",np.sqrt(error/N_out)
     return fitness
 # end getFitness    
+    
+def getBehavior(pop_member, adj_mask, SNNparam, target_rates, max_t):
+    # Function evaluates SNN performance and calculates fitness value.
+
+    # 1. Run the network for max_t ticks and record its outputs:
+    N_out = SNNparam.num_out # number of output neurons
+    output_spikes = np.zeros((N_out))
+    # since no gate is simulated in this experiment, gate will be substituted by random spiking:
+    N_aux = 10 # gate will have 10 output neurons (basal ganglia are converging from 10^4 to 10^2)
+    aux_input_vals = np.random.randint(2, size = (N_aux,))
+    # Izhikevich model settings:
+    N = SNNparam.ne + SNNparam.ni + SNNparam.num_out        
+    # init excitatory neurons which will be a mix of Class 1 and Class 2:
+    a = np.full((N, 1), 0.02)
+    b = np.full((N, 1), -0.1)
+    c = np.full((N, 1), -55.0)
+    d = np.full((N, 1), 6.0)
+    v = np.full((N, 1), -65.0)
+    u = np.full((N, 1), v[0]*b[0])
+
+    ratio_neur_type = 0.3 # how many Class 2 neurons are added into the mix
+    for idx in xrange(0,int(0.8*N)):
+        if rd.random() < ratio_neur_type:
+            a[idx] = 0.2
+            b[idx] = 0.26
+            c[idx] = -65.0
+            d[idx] = 0.0
+            # need to update u[idx], since b[idx] changed:
+            u[idx] = v[idx] * b[idx]
+    # Set the last 20% of neurons to fast inhibitory params:
+    for idx in xrange(int(0.8*N),N):
+        a[idx] = 0.1
+        b[idx] = 0.2
+        c[idx] = -65.0
+        d[idx] = 2.0
+        # need to update u[idx], since b[idx] changed:
+        u[idx] = v[idx] * b[idx]
+    #end FOR            
+
+    # now go through all of the ticks:
+    for tick in xrange(0, max_t):
+        # during the first tick, set all of the inputs to 1s (to jump start the SNN)
+        if tick == 0:
+            output = np.full((N_out,1),1)
+        # end IF    
+        output, v, u = simSNN(pop_member, adj_mask, SNNparam, a, b, c, d, v, u, aux_input_vals, output)
+        for i in xrange(0, N_out):
+            output_spikes[i] += output[i]
+        # end FOR
+    # end FOR        
+            
+
+    # 2. Estimate how close were the firing rates of output neurons to the target:
+    # actual firing rates:
+    firing_rates = np.zeros((N_out))
+    # go through all of the output neurons:
+    for i in xrange(0, N_out):
+        #
+        firing_rates[i] = output_spikes[i] / (1000.0 * (max_t / 1000.0))
+        print "Neuron's #",i," target rate was set at",target_rates[i]*1000.0," spikes per 1 second."
+        print "Neuron #",i," had a firing rate =",firing_rates[i],", because it fired a total of",output_spikes[i]," per ", max_t / 1000.0, "seconds."
+
+# end getBehavior    
 
 def selectParents(fitness, num_par): 
     # function for selecting parents using stochastic universal sampling + identifying worst pop members to be replaced
@@ -539,7 +600,7 @@ np.random.seed(0)
 # Sensorimotor loop:
 num_input = 12
 num_output = 12
-num_hidden = 20
+num_hidden = 300
 num_gate = 10
 N = num_hidden + num_output # these are actually simulated
 
@@ -548,13 +609,29 @@ N = num_hidden + num_output # these are actually simulated
 # GA parameters:
 # len_indv = num_gate * num_hidden + num_input * num_hidden + num_hidden * num_hidden + num_hidden * num_output
 # # -----    wts btw gate & hid  + wts btw input & hidden + wts btw hidden & hidden  +  wts btw hidden & output
-len_indv = num_hidden * num_hidden
+len_indv = num_hidden * num_hidden # only weights within the hidden nodes are optimized
 num_pop = 50
 prob_xover = 1.0
 prob_mut = 0.05
-num_par = 10
+num_par = 20
 max_gen = 50
 max_t = 1000 # time to simulate the SNN, 1000 ms
+
+p_conn = 0.01 # connection probability
+# now create adjecency mask that is going to be the same for all population 
+# members (in order to give them all a fair shot, eventually, a series of
+# tests with different random masks should be run to test the robustness of 
+# results to the choice of the mask)
+mask_length = len_indv * p_conn
+adj_mask = []
+mean_conn_num = int(p_conn * num_hidden)
+for i in xrange(0, num_hidden):
+    ith_idx = np.random.randint(num_hidden, size=(mean_conn_num,)) # 
+    for j in xrange(0, mean_conn_num):
+        adj_mask.append([i, ith_idx[j]])
+# end FOR making 2D adj mask        
+
+        
 
 # to keep track of performance:
 best_fit=np.zeros((max_gen))
@@ -565,22 +642,37 @@ fitness = np.zeros((num_pop))
 was_changed = np.zeros((num_pop)) # 0 - means the member was changed and needs to be re-assessed, 1 - no need to re-assess its fitness
 
 # generate initial population:
-pop = [np.random.randint(2, size=(len_indv,)) for i in xrange(0,num_pop)]
-
+# pop = [np.random.randint(2, size=(len_indv,)) for i in xrange(0,num_pop)]
+pop = [np.random.randint(2, size=(mask_length,)) for i in xrange(0,num_pop)]
 # generate SNN parameters
 # parameter structure per sub-network, it's only one here, since the gate is not yet added
-SNNparam = Bunch(ne=16, ni=4, num_in=12, num_out=12 )
+SNNparam = Bunch(ne=int(num_hidden*0.8), ni=int(num_hidden*0.2), num_in=num_input, num_out=num_output, pconn=p_conn, mcn = mean_conn_num)
 # end FOR   
-target_rates = np.full((SNNparam.num_out, 1), 0.1) # target rates are set to be maximum for max fit   
+target_rates = np.full((SNNparam.num_out, 1), 0.05) # target rates are set to be maximum for max fit   
 
 # main cycle:
 for gen in xrange(0,max_gen):
     print "Gen #",gen
-               
+    print "==========================================="
+    if gen > 0:
+        curr_time = t.time()
+        time_diff = curr_time - start_time
+        # print "Time diff =",time_diff
+        apprx_time_per_gen = time_diff / (gen + 1)
+        # print "apprx_time_per_gen =",apprx_time_per_gen
+        apprx_time_left = (max_gen - gen - 1) * apprx_time_per_gen
+        # print "apprx_time_left",apprx_time_left
+        hours_left = np.floor(apprx_time_left / 3600)
+        mins_left = np.floor((apprx_time_left - hours_left * 3600) / 60)
+        secs_left = apprx_time_left - hours_left * 3600 - mins_left * 60
+        
+        print hours_left, "hours", mins_left, "mins", np.round(secs_left), "seconds left..."
+        print "==========================================="
+        
     # calculate fitness for new population members: 
     for member in xrange(0, num_pop):
         if was_changed[member]==0:
-            fitness[member] = getFitness(pop[member], SNNparam, target_rates, max_t)               
+            fitness[member] = getFitness(pop[member], adj_mask, SNNparam, target_rates, max_t)               
             was_changed[member]=1
  #           print "Evaluating",member,"member"
         # end IF
@@ -589,7 +681,8 @@ for gen in xrange(0,max_gen):
     # store this generation's best and avg fitness:
     best_fit[gen]=max(fitness)
     avg_fit[gen]=mean(fitness)    
-    print "Best fit=",best_fit[gen],"Avg.fit=",avg_fit[gen]
+    print "Best fit=",format(best_fit[gen], '.4f'),"Avg.fit=",format(avg_fit[gen], '.4f')
+    print "==========================================="
     # select parents for mating:
     # print "Fitness =", fitness, ", need to choose parents #:", num_par
     (par_ids, worst_ids) = selectParents(fitness,num_par)
@@ -599,6 +692,11 @@ for gen in xrange(0,max_gen):
     # replace worst with children produced by crossover and mutation:
     (pop,was_changed) = produceOffspring(pop, par_ids, worst_ids, was_changed,prob_xover,prob_mut)
     
+    # inform on the performance of the best pop.member so far:
+    if gen > 0:
+        if np.mod(gen,10)==0:
+            best_id_temp = fitness.argsort()[-1:][::-1]
+            getBehavior(pop[best_id_temp], adj_mask, SNNparam, target_rates, max_t)
 # end FOR === MAIN CYCLE ===
 
 # # save the best guy:
@@ -613,8 +711,8 @@ for idx in xrange(0,len(best10_ids)):
     writeWeights(best_name, pop[best10_ids[idx]], len(pop[best10_ids[idx]]))
 # end FOR
 
-os.mkdir('Results')
-os.chdir('Results')
+# os.mkdir('Results')
+# os.chdir('Results')
 
 # FITNESS PLOT:    
 #
@@ -641,3 +739,5 @@ plb.show()
 # plotSpikes(pop[0], row_len)
 
 # END SCRIPT
+
+
